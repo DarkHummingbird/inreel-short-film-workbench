@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "内容审核输入",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "brief",
+              "concept",
+              "script",
+              "storyboard",
+              "cut",
+              "language_assets",
+              "delivery",
+              "reference",
+              "media",
+              "policy"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          }
+        },
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "task_request": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "artifact_ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+    },
+    "artifact_kind": {
+      "enum": [
+        "concept",
+        "script",
+        "storyboard",
+        "delivery"
+      ]
+    },
+    "fragments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "fragment_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "fragment_id",
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "media": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "asset_ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "video",
+              "audio",
+              "subtitle",
+              "music",
+              "delivery"
+            ]
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "available_to_model": {
+            "type": "boolean"
+          },
+          "shot_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "asset_ref",
+          "kind",
+          "duration_ms",
+          "available_to_model",
+          "shot_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "project_constraints": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "rule_id",
+          "description"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "rule_profile_ref": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "project_id",
+    "sources",
+    "task_request",
+    "artifact_ref",
+    "artifact_kind",
+    "fragments",
+    "media",
+    "project_constraints",
+    "rules",
+    "rule_profile_ref"
+  ],
+  "additionalProperties": false
+}

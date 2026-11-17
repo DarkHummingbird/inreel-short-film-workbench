@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "后期输出",
+  "type": "object",
+  "properties": {
+    "status": {
+      "enum": [
+        "ok",
+        "needs_input",
+        "unsupported"
+      ]
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "prepare_language",
+                "assemble_delivery"
+              ]
+            },
+            "target_language": {
+              "enum": [
+                "zh-CN",
+                "en",
+                "th"
+              ]
+            },
+            "cut_ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+            },
+            "ordered_video_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+              },
+              "minItems": 1
+            },
+            "language_assets_ref": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "dubbing_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+              },
+              "minItems": 0
+            },
+            "subtitle_ref": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "music_ref": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "missing_line_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              "minItems": 0
+            },
+            "timing_issues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "line_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                  },
+                  "shot_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                  },
+                  "detail": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "line_id",
+                  "shot_id",
+                  "detail"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 0
+            },
+            "language_confirmation_ref": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "mode",
+            "target_language",
+            "cut_ref",
+            "ordered_video_refs",
+            "language_assets_ref",
+            "dubbing_refs",
+            "subtitle_ref",
+            "music_ref",
+            "duration_ms",
+            "missing_line_ids",
+            "timing_issues",
+            "language_confirmation_ref"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "mode": {
+                    "const": "assemble_delivery"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "language_confirmation_ref": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+                  },
+                  "language_assets_ref": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+                  },
+                  "subtitle_ref": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+                  },
+                  "music_ref": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+                  },
+                  "missing_line_ids": {
+                    "maxItems": 0
+                  },
+                  "timing_issues": {
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "enum": [
+              "missing_input",
+              "conflicting_input",
+              "unsupported_capability",
+              "unverifiable",
+              "invalid_reference",
+              "timing_mismatch",
+              "continuity_risk",
+              "content_risk",
+              "format_risk",
+              "manual_review",
+              "assumption"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shot_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field",
+          "shot_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "status",
+    "result",
+    "issues"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ok"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "result": {
+            "type": "null"
+          },
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

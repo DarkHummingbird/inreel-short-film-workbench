@@ -1,0 +1,80 @@
+{
+  "contract_version": "1.1.0",
+  "agents": {
+    "director": {
+      "name": "导演",
+      "system_prompt": "agents/director/system.md",
+      "input_schema": "agents/director/input.schema.json",
+      "output_schema": "agents/director/output.schema.json",
+      "example": "agents/director/example.json",
+      "failure_guide": "agents/director/failure.md",
+      "additional_examples": [
+        "agents/director/example-thai-delivery.json"
+      ]
+    },
+    "producer": {
+      "name": "制片",
+      "system_prompt": "agents/producer/system.md",
+      "input_schema": "agents/producer/input.schema.json",
+      "output_schema": "agents/producer/output.schema.json",
+      "example": "agents/producer/example.json",
+      "failure_guide": "agents/producer/failure.md"
+    },
+    "creative": {
+      "name": "创意策划",
+      "system_prompt": "agents/creative/system.md",
+      "input_schema": "agents/creative/input.schema.json",
+      "output_schema": "agents/creative/output.schema.json",
+      "example": "agents/creative/example.json",
+      "failure_guide": "agents/creative/failure.md"
+    },
+    "writer": {
+      "name": "编剧",
+      "system_prompt": "agents/writer/system.md",
+      "input_schema": "agents/writer/input.schema.json",
+      "output_schema": "agents/writer/output.schema.json",
+      "example": "agents/writer/example.json",
+      "failure_guide": "agents/writer/failure.md"
+    },
+    "storyboard": {
+      "name": "分镜师",
+      "system_prompt": "agents/storyboard/system.md",
+      "input_schema": "agents/storyboard/input.schema.json",
+      "output_schema": "agents/storyboard/output.schema.json",
+      "example": "agents/storyboard/example.json",
+      "failure_guide": "agents/storyboard/failure.md"
+    },
+    "art": {
+      "name": "美术",
+      "system_prompt": "agents/art/system.md",
+      "input_schema": "agents/art/input.schema.json",
+      "output_schema": "agents/art/output.schema.json",
+      "example": "agents/art/example.json",
+      "failure_guide": "agents/art/failure.md",
+      "additional_examples": [
+        "agents/art/example-character.json"
+      ]
+    },
+    "vfx": {
+      "name": "视效",
+      "system_prompt": "agents/vfx/system.md",
+      "input_schema": "agents/vfx/input.schema.json",
+      "output_schema": "agents/vfx/output.schema.json",
+      "example": "agents/vfx/example.json",
+      "failure_guide": "agents/vfx/failure.md"
+    },
+    "post": {
+      "name": "后期",
+      "system_prompt": "agents/post/system.md",
+      "input_schema": "agents/post/input.schema.json",
+      "output_schema": "agents/post/output.schema.json",
+      "example": "agents/post/example.json",
+      "failure_guide": "agents/post/failure.md",
+      "additional_examples": [
+        "agents/post/example-prepare.json",
+        "agents/post/example-chinese.json",
+        "agents/post/example-english.json"
+      ]
+    }
+  }
+}

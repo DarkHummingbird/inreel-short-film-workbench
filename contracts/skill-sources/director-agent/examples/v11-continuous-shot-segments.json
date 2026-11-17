@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.1.0",
+  "scene_id": "SC003",
+  "scene_intent": "用一个不剪断的12秒跟随镜头，从走廊观察转为进入房间发现空座位，并在门框遮挡处完成生成交接。",
+  "shots": [
+    {
+      "shot_id": "SC003_SH001",
+      "duration_sec": 12,
+      "narrative_function": "保持观众与人物同步发现空房间，让门框遮挡成为生成交接而不是编辑切镜。",
+      "dramatic_subject": "人物从期待见面到确认房间空无一人的变化",
+      "shot_size": "背后中景逐渐变为侧面中近景",
+      "camera_angle": "肩高平视",
+      "camera_height": "1.5米",
+      "lens_intent": "自然透视保持走廊和房间的连续空间。",
+      "camera_position": "人物背后两米，随其右转穿门后移至左侧",
+      "camera_movement": "稳定前跟，门框全遮挡时保持方向，进入房间后轻弧移到人物左侧并停住。",
+      "subject_action": ["人物沿走廊前行", "右转推门", "进入房间后减速", "看向空椅并停住"],
+      "blocking": ["人物从走廊中央进入右侧门", "空椅位于房间右后方"],
+      "composition": "走廊背影构图通过门框遮挡转为人物侧脸与空椅共享画面。",
+      "foreground": "第6秒门框横向全遮挡",
+      "background": "前段走廊灯，后段房间空椅",
+      "focus_strategy": "跟随人物背部，进入房间后转焦到空椅，再回到人物侧脸。",
+      "lighting_intent": "走廊冷光过渡到房间暖窗光，门框遮挡处锁定曝光。",
+      "sound_focus": "脚步、推门声、房间低风声和人物停步后的静默",
+      "transition_in": "脚步声先行",
+      "transition_out": "人物与空椅同框停住后切出",
+      "continuity_anchors": ["人物灰色长外套", "门把在右手", "空椅在房间右后方", "门框第6秒全遮挡"],
+      "timeline_beats": [
+        {"start_sec": 0, "end_sec": 4, "subject_action": "人物沿走廊中央前行并看向右侧门。", "camera_action": "在人物背后两米稳定前跟。", "environment_action": "走廊顶灯依次掠过外套。", "expression_change": "背影保持期待性的快速步幅。", "continuity_anchor": "灰色长外套，人物朝前，右侧门接近。"},
+        {"start_sec": 4, "end_sec": 7, "subject_action": "人物右转，用右手推门并跨入房间。", "camera_action": "继续前跟，门框在第6秒覆盖全画面，遮挡后保持同一运动方向。", "environment_action": "冷走廊光在遮挡后转为暖窗光。", "expression_change": "人物进入房间后步幅减慢。", "continuity_anchor": "全黑门框遮挡，右手仍在门把，右脚先跨门槛。"},
+        {"start_sec": 7, "end_sec": 12, "subject_action": "人物松开门把，走两步后看向右后方空椅并停住。", "camera_action": "轻弧移到人物左侧，在人物侧脸与空椅同框时停止。", "environment_action": "窗帘轻动，房间其余物体静止。", "expression_change": "期待转为失落但不低头。", "continuity_anchor": "结束时人物左侧脸与右后方空椅同框。"}
+      ],
+      "end_state": "人物停在房间中央，左侧脸朝向右后方空椅，摄影机位于人物左侧，暖窗光稳定，门仍半开。",
+      "segment_plan": {
+        "camera_path": "走廊背后前跟，穿过右侧门后延续前进，再弧移到人物左侧。",
+        "subject_path": "走廊中央前行，右转穿门，房间内走两步后停在中央并看向右后方。",
+        "focus_transitions": ["背部锁焦", "进入房间后转到空椅", "最后回到人物侧脸"],
+        "composition_changes": ["背后中景", "门框全遮挡", "侧脸与空椅共享中近景"],
+        "occlusion_points": ["第6秒门框覆盖全画面"],
+        "hidden_cut_points": ["第6秒门框全黑遮挡可隐藏生成交接"],
+        "segment_count": 2,
+        "segment_handoffs": ["第6秒全黑门框遮挡；人物右手在门把、右脚刚越过门槛，摄影机保持向前。"],
+        "start_anchor": "走廊冷光，灰色长外套背影，人物位于中央，右侧门在前方。",
+        "end_anchor": "房间暖窗光，人物左侧脸和右后方空椅同框，门半开。",
+        "segments": [
+          {
+            "segment_id": "SC003_SH001_SG01",
+            "start_sec": 0,
+            "end_sec": 6,
+            "start_frame": "冷光走廊，灰色长外套人物背对镜头居中。",
+            "subject_position_facing": "人物在走廊中央朝前，4秒后右转面向门。",
+            "current_action_state": "前行、右转、右手推门，右脚开始跨门槛。",
+            "camera_position": "人物背后两米、肩高。",
+            "camera_movement": "稳定前跟直至门框全遮挡。",
+            "environment_lighting": "冷色顶灯依次经过，门框遮挡时全黑。",
+            "end_frame": "门框占满画面，人物右手仍在门把，右脚刚跨门槛。",
+            "next_handoff_anchor": "全黑门框遮挡、向前运动方向、右手门把和右脚动作进度。"
+          },
+          {
+            "segment_id": "SC003_SH001_SG02",
+            "start_sec": 6,
+            "end_sec": 12,
+            "start_frame": "由同一全黑门框遮挡开始，人物右手在门把，右脚刚跨门槛。",
+            "subject_position_facing": "人物进入房间后朝前，再转头看右后方空椅。",
+            "current_action_state": "完成跨门、松手、走两步、减速并停住。",
+            "camera_position": "从人物背后延续向前，随后移动到人物左侧。",
+            "camera_movement": "遮挡后保持向前，再轻弧移，人物停住时停止。",
+            "environment_lighting": "遮挡后进入稳定暖窗光，窗帘轻动。",
+            "end_frame": "人物左侧脸与右后方空椅同框，门半开。",
+            "next_handoff_anchor": "人物左侧脸、右后方空椅、暖窗光和停住的摄影机。"
+          }
+        ]
+      },
+      "image_prompt": "冷光走廊里穿灰色长外套的人物背影走向右侧门，肩高跟随构图，真实电影预演质感。",
+      "video_prompt": "Duration: 12s. Start: 冷光走廊中人物穿灰色长外套背对镜头居中，右侧门在前方。 Subject action: 人物前行后右转，用右手推门进入房间，走两步看向右后方空椅并停住。 Camera: 背后稳定前跟，门框全遮挡后保持方向，进入房间弧移到人物左侧并停止。 Environment: 冷走廊光在门框遮挡后过渡为暖窗光，窗帘轻动。 End: 人物左侧脸与右后方空椅同框，门半开，摄影机静止。 Handoff anchor: 左侧脸、右后方空椅、暖窗光和半开门。",
+      "negative_prompt": "明显编辑切镜，人物服装变化，开门换手，门位置改变，遮挡前后方向反转，空椅移动，光线跳变，文字，水印"
+    }
+  ],
+  "x_test_case": "12秒连续长镜头拆成两个生成段"
+}

@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "导演输出",
+  "type": "object",
+  "properties": {
+    "status": {
+      "enum": [
+        "ok",
+        "needs_input",
+        "unsupported"
+      ]
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "stage": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 6
+            },
+            "next_actor": {
+              "enum": [
+                "operations",
+                "director",
+                "reviewer"
+              ]
+            },
+            "deliverable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+              },
+              "minItems": 0
+            },
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "maxItems": 5
+            },
+            "human_decision": {
+              "type": "string",
+              "minLength": 1
+            },
+            "target_language": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "zh-CN",
+                    "en",
+                    "th"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "stage",
+            "next_actor",
+            "deliverable",
+            "required_refs",
+            "actions",
+            "human_decision",
+            "target_language"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "stage": {
+                    "enum": [
+                      1,
+                      2
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "next_actor": {
+                    "const": "operations"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "stage": { "const": 6 }
+                }
+              },
+              "then": {
+                "properties": {
+                  "next_actor": { "enum": ["operations", "reviewer"] }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "stage": {
+                    "enum": [
+                      3,
+                      4,
+                      5
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "next_actor": {
+                    "const": "director"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "stage": {
+                    "maximum": 4
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "target_language": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "stage": {
+                    "minimum": 5
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "target_language": {
+                    "enum": [
+                      "zh-CN",
+                      "en",
+                      "th"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "enum": [
+              "missing_input",
+              "conflicting_input",
+              "unsupported_capability",
+              "unverifiable",
+              "invalid_reference",
+              "timing_mismatch",
+              "continuity_risk",
+              "content_risk",
+              "format_risk",
+              "manual_review",
+              "assumption"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shot_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field",
+          "shot_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "status",
+    "result",
+    "issues"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ok"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "result": {
+            "type": "null"
+          },
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

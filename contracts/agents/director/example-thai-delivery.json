@@ -1,0 +1,60 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "delivery",
+        "ref": "th_delivery@v1"
+      },
+      {
+        "kind": "language_assets",
+        "ref": "th_lang@v1"
+      }
+    ],
+    "task_request": null,
+    "brief": {
+      "goal": "series_promotion",
+      "theme": "BL",
+      "premise": "阿哲追到车站出口，试图挽留即将离开的小林。",
+      "audience": "泰国短剧观众；同时验证中文、英文和泰文版本",
+      "hook": "前三秒看出有人要走、有人舍不得",
+      "ending_constraint": "停在小林听见挽留，保留是否回头的悬念",
+      "must_keep": [
+        "两位成年主角是分手三个月的前任",
+        "小林拖着行李离开",
+        "两人没有当场和好"
+      ],
+      "target_duration_ms": 36000,
+      "aspect_ratio": "9:16",
+      "target_languages": [
+        "zh-CN",
+        "en",
+        "th"
+      ]
+    },
+    "next_checkpoint": 6,
+    "artifact_refs": [
+      "th_delivery@v1"
+    ],
+    "blocking_issues": [],
+    "review_feedback": null,
+    "target_language": "th"
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "stage": 6,
+      "next_actor": "operations",
+      "deliverable": "泰语成片 th_delivery@v1",
+      "required_refs": [
+        "th_delivery@v1"
+      ],
+      "actions": [
+        "预览泰语画面、配音和字幕"
+      ],
+      "human_decision": "运营只验收 th_delivery@v1。",
+      "target_language": "th"
+    },
+    "issues": []
+  }
+}

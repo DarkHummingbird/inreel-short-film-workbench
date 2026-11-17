@@ -1,0 +1,148 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "cut",
+        "ref": "cut@v1"
+      }
+    ],
+    "task_request": null,
+    "mode": "prepare_language",
+    "target_language": "th",
+    "cut_ref": "cut@v1",
+    "cut": [
+      {
+        "shot_id": "S01",
+        "video_ref": "S01_video@v1",
+        "start_ms": 0,
+        "duration_ms": 6000,
+        "dialogue": []
+      },
+      {
+        "shot_id": "S02",
+        "video_ref": "S02_video@v1",
+        "start_ms": 6000,
+        "duration_ms": 7000,
+        "dialogue": [
+          {
+            "line_id": "L01",
+            "speaker_id": "xiaolin",
+            "text": "你每次都来晚了。"
+          }
+        ]
+      },
+      {
+        "shot_id": "S03",
+        "video_ref": "S03_video@v1",
+        "start_ms": 13000,
+        "duration_ms": 8000,
+        "dialogue": [
+          {
+            "line_id": "L02",
+            "speaker_id": "azhe",
+            "text": "那你再等我一次。"
+          }
+        ]
+      },
+      {
+        "shot_id": "S04",
+        "video_ref": "S04_video@v2",
+        "start_ms": 21000,
+        "duration_ms": 7000,
+        "dialogue": [
+          {
+            "line_id": "L03",
+            "speaker_id": "azhe",
+            "text": "先别走。"
+          }
+        ]
+      },
+      {
+        "shot_id": "S05",
+        "video_ref": "S05_video@v1",
+        "start_ms": 28000,
+        "duration_ms": 8000,
+        "dialogue": []
+      }
+    ],
+    "lines": [
+      {
+        "line_id": "L01",
+        "shot_id": "S02",
+        "speaker_id": "xiaolin",
+        "source_text": "你每次都来晚了。",
+        "target_text": "นายมาสายทุกทีเลย",
+        "audio_ref": "th_audio_1@v1",
+        "audio_start_ms": 7000,
+        "audio_duration_ms": 2100,
+        "subtitle_start_ms": 6950,
+        "subtitle_end_ms": 9300
+      },
+      {
+        "line_id": "L02",
+        "shot_id": "S03",
+        "speaker_id": "azhe",
+        "source_text": "那你再等我一次。",
+        "target_text": "งั้นรอฉันอีกสักครั้งได้ไหม",
+        "audio_ref": "th_audio_2@v1",
+        "audio_start_ms": 14000,
+        "audio_duration_ms": 2400,
+        "subtitle_start_ms": 13950,
+        "subtitle_end_ms": 16700
+      },
+      {
+        "line_id": "L03",
+        "shot_id": "S04",
+        "speaker_id": "azhe",
+        "source_text": "先别走。",
+        "target_text": "อย่าเพิ่งไป",
+        "audio_ref": null,
+        "audio_start_ms": null,
+        "audio_duration_ms": null,
+        "subtitle_start_ms": null,
+        "subtitle_end_ms": null
+      }
+    ],
+    "language_assets_ref": null,
+    "subtitle_ref": null,
+    "music": null,
+    "language_confirmation_ref": null
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "mode": "prepare_language",
+      "target_language": "th",
+      "cut_ref": "cut@v1",
+      "ordered_video_refs": [
+        "S01_video@v1",
+        "S02_video@v1",
+        "S03_video@v1",
+        "S04_video@v2",
+        "S05_video@v1"
+      ],
+      "language_assets_ref": null,
+      "dubbing_refs": [
+        "th_audio_1@v1",
+        "th_audio_2@v1"
+      ],
+      "subtitle_ref": null,
+      "music_ref": null,
+      "duration_ms": 36000,
+      "missing_line_ids": [
+        "L03"
+      ],
+      "timing_issues": [],
+      "language_confirmation_ref": null
+    },
+    "issues": [
+      {
+        "code": "missing_input",
+        "message": "S04 的 L03 尚未关联泰语配音。",
+        "field": "lines",
+        "shot_id": "S04"
+      }
+    ]
+  }
+}

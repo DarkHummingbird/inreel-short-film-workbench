@@ -1,0 +1,54 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "delivery",
+        "ref": "th_delivery_bad_ending@v1"
+      }
+    ],
+    "task_request": null,
+    "artifact_ref": "th_delivery_bad_ending@v1",
+    "artifact_kind": "delivery",
+    "fragments": [],
+    "media": [
+      {
+        "asset_ref": "th_delivery_bad_ending@v1",
+        "kind": "delivery",
+        "duration_ms": 36000,
+        "available_to_model": true,
+        "shot_id": null
+      }
+    ],
+    "project_constraints": [
+      "停在小林听见挽留，保留是否回头的悬念"
+    ],
+    "rules": [],
+    "rule_profile_ref": null
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "artifact_ref": "th_delivery_bad_ending@v1",
+      "findings": [
+        {
+          "category": "project_constraint",
+          "rule_id": null,
+          "fragment_id": null,
+          "shot_id": null,
+          "evidence": "末镜可见小林转身靠近阿哲。",
+          "status": "observed",
+          "severity": "warning",
+          "suggestion": "保留停步侧脸，去掉揭晓是否回头的画面。",
+          "asset_ref": "th_delivery_bad_ending@v1",
+          "start_ms": 33000,
+          "end_ms": 35000
+        }
+      ],
+      "manual_checks": [
+        "未提供平台规则，运营按实际发布要求复核。"
+      ]
+    },
+    "issues": []
+  }
+}

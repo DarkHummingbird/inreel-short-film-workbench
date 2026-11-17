@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.1.0",
+  "scene_id": "SC005",
+  "scene_intent": "保留同一导演母版，将雨夜递伞镜头转换为两种通用模型能力配置的提示词。",
+  "shots": [
+    {
+      "shot_id": "SC005_SH001",
+      "duration_sec": 6,
+      "narrative_function": "用递伞完成母女第一次空间接近。",
+      "dramatic_subject": "两只手在伞柄旁短暂共处",
+      "shot_size": "双人中近景",
+      "camera_angle": "平视轻侧面",
+      "camera_height": "胸口高度",
+      "lens_intent": "轻度压缩距离并保留门框边界。",
+      "camera_position": "行动轴同侧，母亲左、女儿右",
+      "camera_movement": "递伞时缓慢前移半步，双手相遇即停。",
+      "subject_action": ["母亲递伞", "女儿先看伞再抬眼", "女儿右手接住伞柄"],
+      "blocking": ["母亲从左侧跨出", "女儿留在右侧门框内", "伞柄停在中央"],
+      "composition": "伞柄横向连接两人，门框保持在女儿身后。",
+      "foreground": "退出构图的桌角",
+      "background": "冷色门框和静止行李",
+      "focus_strategy": "先锁定双手，女儿抬眼时转焦到眼线。",
+      "lighting_intent": "伞柄位于冷暖光交界。",
+      "sound_focus": "木柄轻碰和连续雨声",
+      "transition_in": "母亲右手从静止恢复为递出",
+      "transition_out": "共同握伞时以雨声切出",
+      "continuity_anchors": ["母亲左女儿右", "母亲右手递出", "女儿右手接住", "行李在门框右侧", "冷暖光方向不变"],
+      "model_adapter": {
+        "master_shot_id": "SC005_SH001",
+        "preserved_anchors": ["递伞是唯一空间接近", "母亲左女儿右", "双方右手在木柄相遇", "门框和行李不动", "结束时共同握伞"],
+        "variants": [
+          {
+            "adapter_id": "ADAPTER-COMPACT-I2V",
+            "target_profile": "短提示、强首帧锁定、单一摄影机运动的通用图生视频配置",
+            "prompt_length_strategy": "使用短句保留动作顺序和五个连续性锚点。",
+            "action_density_strategy": "只保留递出、看伞、抬眼、接住四个顺序动作。",
+            "recommended_duration_sec": 6,
+            "camera_complexity_strategy": "仅一次缓慢前移并在双手相遇时停止。",
+            "start_end_frame_strategy": "使用锁定首帧；结束帧明确共同握伞和眼线。",
+            "negative_prompt_strategy": "短列表约束换手、换位、行李移动和光向变化。",
+            "recommend_image_to_video": true,
+            "recommend_segmented_generation": false,
+            "adapted_prompt": "6秒图生视频。母亲在左、女儿在右侧门框，行李不动。母亲右手缓慢递出旧伞；女儿先看伞，再抬眼，用右手接住木柄。摄影机只前移半步并停止。结束时两人共同握伞，冷暖光方向不变。"
+          },
+          {
+            "adapter_id": "ADAPTER-LONG-T2V",
+            "target_profile": "较长结构化提示、支持明确首尾状态的通用文生视频配置",
+            "prompt_length_strategy": "用起始、人物、摄影机、环境、结束和锚点分段描述。",
+            "action_density_strategy": "保留表演停顿，但不增加独立环境事件。",
+            "recommended_duration_sec": 6,
+            "camera_complexity_strategy": "指定触发、路径、速度和停止点，不增加转角或变焦。",
+            "start_end_frame_strategy": "文字锁定开始构图和结束构图，要求门框、行李与左右关系一致。",
+            "negative_prompt_strategy": "用完整语义描述身份、持手、方向、道具和光线漂移。",
+            "recommend_image_to_video": false,
+            "recommend_segmented_generation": false,
+            "adapted_prompt": "Duration 6 seconds. Start with the mother on the left holding an old umbrella in her right hand and the daughter inside the right doorway, luggage fixed behind her. The mother pauses, offers the handle; the daughter looks at it, raises her eyes, and accepts with her right hand. The camera advances slowly by half a step and stops on contact. End with both hands sharing the handle, mother left, daughter right, doorway and lighting unchanged."
+          }
+        ]
+      },
+      "image_prompt": "雨夜厨房门口，母亲左侧递旧伞，女儿右侧门框内接木柄，行李在右后方，冷暖光交界。",
+      "video_prompt": "Duration: 6s. Start: 母亲在左侧右手持伞，女儿在右侧门框内，行李静止。 Subject action: 母亲递伞；女儿先看伞再抬眼，随后用右手接住。 Camera: 缓慢前移半步并在双手相遇时停止。 Environment: 雨影持续，门框和行李不动。 End: 两人共同握住伞柄，母亲左女儿右。 Handoff anchor: 共同握伞、左右位置、行李和冷暖光方向。",
+      "negative_prompt": "人物换位，伞换手，行李移动，快速变焦，光线反转，身份漂移，文字，水印"
+    }
+  ],
+  "x_test_case": "同一导演母版转换成不同模型提示词"
+}

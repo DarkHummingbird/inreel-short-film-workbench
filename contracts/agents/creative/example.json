@@ -1,0 +1,116 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "brief",
+        "ref": "brief@v1"
+      }
+    ],
+    "task_request": null,
+    "brief": {
+      "goal": "series_promotion",
+      "theme": "BL",
+      "premise": "阿哲追到车站出口，试图挽留即将离开的小林。",
+      "audience": "泰国短剧观众；同时验证中文、英文和泰文版本",
+      "hook": "前三秒看出有人要走、有人舍不得",
+      "ending_constraint": "停在小林听见挽留，保留是否回头的悬念",
+      "must_keep": [
+        "两位成年主角是分手三个月的前任",
+        "小林拖着行李离开",
+        "两人没有当场和好"
+      ],
+      "target_duration_ms": 36000,
+      "aspect_ratio": "9:16",
+      "target_languages": [
+        "zh-CN",
+        "en",
+        "th"
+      ]
+    },
+    "characters": [
+      {
+        "character_id": "azhe",
+        "name": "阿哲",
+        "description": "成年男性，深蓝外套，空手",
+        "goal": "让小林再等一次"
+      },
+      {
+        "character_id": "xiaolin",
+        "name": "小林",
+        "description": "成年男性，浅灰外套，拖黑色行李箱",
+        "goal": "离开车站，不轻易回头"
+      }
+    ],
+    "canon_facts": [
+      "两位成年主角是分手三个月的前任",
+      "小林拖着行李离开",
+      "两人没有当场和好"
+    ],
+    "candidate_count": 2
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "concepts": [
+        {
+          "concept_key": "C01",
+          "title": "车站挽留",
+          "hook": "行李箱加速滚向出口，小林始终没有回头",
+          "character_goals": [
+            {
+              "character_id": "azhe",
+              "goal": "让小林再等一次"
+            },
+            {
+              "character_id": "xiaolin",
+              "goal": "离开车站，不轻易回头"
+            }
+          ],
+          "conflict": "小林赶着离开，阿哲只剩几秒说话",
+          "turn": "阿哲承认来晚并请求再等一次",
+          "ending": "停在小林听见挽留，保留是否回头的悬念",
+          "visual_motif": "出口灯牌与停下的轮子",
+          "production_complexity": "low",
+          "preserved_facts": [
+            "两位成年主角是分手三个月的前任",
+            "小林拖着行李离开",
+            "两人没有当场和好"
+          ],
+          "new_elements": [
+            "车站出口挽留场景为宣推新增"
+          ]
+        },
+        {
+          "concept_key": "C02",
+          "title": "旧车票",
+          "hook": "小林从车票夹抽出写着两人名字的旧票",
+          "character_goals": [
+            {
+              "character_id": "azhe",
+              "goal": "让小林再等一次"
+            },
+            {
+              "character_id": "xiaolin",
+              "goal": "离开车站，不轻易回头"
+            }
+          ],
+          "conflict": "小林要丢掉旧票，阿哲想拿回来",
+          "turn": "小林不丢票，却仍往出口走",
+          "ending": "停在小林听见挽留，保留是否回头的悬念",
+          "visual_motif": "旧票背面的名字",
+          "production_complexity": "medium",
+          "preserved_facts": [
+            "两位成年主角是分手三个月的前任",
+            "小林拖着行李离开",
+            "两人没有当场和好"
+          ],
+          "new_elements": [
+            "车站出口挽留场景为宣推新增"
+          ]
+        }
+      ]
+    },
+    "issues": []
+  }
+}

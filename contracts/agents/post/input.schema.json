@@ -1,0 +1,359 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "后期输入",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "brief",
+              "concept",
+              "script",
+              "storyboard",
+              "cut",
+              "language_assets",
+              "delivery",
+              "reference",
+              "media",
+              "policy"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          }
+        },
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "task_request": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mode": {
+      "enum": [
+        "prepare_language",
+        "assemble_delivery"
+      ]
+    },
+    "target_language": {
+      "enum": [
+        "zh-CN",
+        "en",
+        "th"
+      ]
+    },
+    "cut_ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+    },
+    "cut": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "shot_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "video_ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          },
+          "start_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "in_ms": { "type": "integer", "minimum": 0 },
+          "out_ms": { "type": "integer", "minimum": 1 },
+          "duration_ms": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "dialogue": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "line_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                },
+                "speaker_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "line_id",
+                "speaker_id",
+                "text"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "shot_id",
+          "video_ref",
+          "start_ms",
+          "duration_ms",
+          "dialogue"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "line_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "shot_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "speaker_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "source_text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target_text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "audio_ref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "audio_start_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "audio_duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subtitle_start_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subtitle_end_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "line_id",
+          "shot_id",
+          "speaker_id",
+          "source_text",
+          "target_text",
+          "audio_ref",
+          "audio_start_ms",
+          "audio_duration_ms",
+          "subtitle_start_ms",
+          "subtitle_end_ms"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "language_assets_ref": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "subtitle_ref": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "music": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "asset_ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "asset_ref",
+            "duration_ms"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "language_confirmation_ref": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "project_id",
+    "sources",
+    "task_request",
+    "mode",
+    "target_language",
+    "cut_ref",
+    "cut",
+    "lines",
+    "language_assets_ref",
+    "subtitle_ref",
+    "music",
+    "language_confirmation_ref"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "assemble_delivery"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "language_confirmation_ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          },
+          "language_assets_ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          },
+          "subtitle_ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          },
+          "music": {
+            "type": "object"
+          },
+          "lines": {
+            "items": {
+              "properties": {
+                "audio_ref": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+                },
+                "audio_start_ms": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "audio_duration_ms": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "subtitle_start_ms": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "subtitle_end_ms": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

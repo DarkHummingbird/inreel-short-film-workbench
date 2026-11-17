@@ -1,0 +1,62 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "brief",
+        "ref": "brief@v1"
+      },
+      {
+        "kind": "script",
+        "ref": "script@v2"
+      }
+    ],
+    "task_request": null,
+    "brief": {
+      "goal": "series_promotion",
+      "theme": "BL",
+      "premise": "阿哲追到车站出口，试图挽留即将离开的小林。",
+      "audience": "泰国短剧观众；同时验证中文、英文和泰文版本",
+      "hook": "前三秒看出有人要走、有人舍不得",
+      "ending_constraint": "停在小林听见挽留，保留是否回头的悬念",
+      "must_keep": [
+        "两位成年主角是分手三个月的前任",
+        "小林拖着行李离开",
+        "两人没有当场和好"
+      ],
+      "target_duration_ms": 36000,
+      "aspect_ratio": "9:16",
+      "target_languages": [
+        "zh-CN",
+        "en",
+        "th"
+      ]
+    },
+    "next_checkpoint": 3,
+    "artifact_refs": [
+      "script@v2"
+    ],
+    "blocking_issues": [],
+    "review_feedback": "末镜保留悬念。",
+    "target_language": null
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "stage": 3,
+      "next_actor": "director",
+      "deliverable": "包含两位角色参考及五镜关键帧的分镜草稿",
+      "required_refs": [
+        "script@v2"
+      ],
+      "actions": [
+        "从已确认剧本拆镜",
+        "保留小林未回头的结尾",
+        "逐镜检查人物、行李与站位"
+      ],
+      "human_decision": "编导通过“确认节点 3：分镜脚本与镜头清单”后进入视频生成。",
+      "target_language": null
+    },
+    "issues": []
+  }
+}

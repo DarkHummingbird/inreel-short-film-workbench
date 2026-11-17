@@ -1,0 +1,11 @@
+node_modules/
+data/
+.venv-scene/
+.env
+.env.*
+test-results/
+docs/
+HANDOFF.md
+InReel\ V2\ 开发方案.md
+contracts/skill-sources/**/skill.zip
+.DS_Store

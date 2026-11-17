@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.1.0",
+  "review_scope": "SC004_SH001 至 SC004_SH003 的角色、动作和首尾帧连续性",
+  "summary": "角色身份和服装锚点稳定；第二镜结束时杯子在右手且动作只完成一半，第三镜却从左手已放下杯子开始，需要修复动作进度、持手和首尾帧。",
+  "issues": [
+    {
+      "issue_id": "ISS101",
+      "severity": "critical",
+      "category": "frame-handoff",
+      "location": "SC004_SH002 → SC004_SH003",
+      "evidence": "SC004_SH002 末帧角色右手持杯停在胸口；SC004_SH003 首帧杯子已在左手并放到桌面。",
+      "impact": "持手和动作进度同时跳变，无法形成连续动作切。",
+      "fix": "重生成 SC004_SH003 首帧：右手杯仍在胸口，然后继续向下放到桌面；或让 SC004_SH002 完成放杯后再切。",
+      "status": "confirmed"
+    },
+    {
+      "issue_id": "ISS102",
+      "severity": "major",
+      "category": "camera-direction",
+      "location": "SC004_SH002 → SC004_SH003",
+      "evidence": "第二镜摄影机位于角色左前方，第三镜无过渡跳到右后方。",
+      "impact": "视线和杯子运动方向反转，使观众误读空间。",
+      "fix": "将第三镜保持在行动轴同侧，或用杯子落桌的中性俯拍作为空间桥。",
+      "status": "confirmed"
+    },
+    {
+      "issue_id": "ISS103",
+      "severity": "minor",
+      "category": "hair",
+      "location": "SC004_SH003",
+      "evidence": "前两镜刘海向角色右侧分，第三镜分缝方向相反。",
+      "impact": "角色身份仍可辨但会产生生成漂移感。",
+      "fix": "把右分刘海加入第三镜首帧身份锚点和负面约束。",
+      "status": "confirmed"
+    }
+  ],
+  "continuity_anchors": [
+    {
+      "from_shot_id": "SC004_SH001",
+      "to_shot_id": "SC004_SH002",
+      "end_frame": "角色右手刚握住蓝杯，面向画面左侧，冷窗光从右后方进入。",
+      "start_frame": "同一右手蓝杯从桌面抬起，角色仍面向左侧，冷窗光不变。",
+      "anchors": ["右手蓝杯", "右分刘海", "灰色外套", "面向画面左侧", "冷窗光右后方"],
+      "status": "matched"
+    },
+    {
+      "from_shot_id": "SC004_SH002",
+      "to_shot_id": "SC004_SH003",
+      "end_frame": "角色右手蓝杯停在胸口，动作未完成，摄影机在左前方。",
+      "start_frame": "角色左手把蓝杯放到桌面，摄影机在右后方。",
+      "anchors": ["右手蓝杯动作进度", "右分刘海", "行动轴同侧", "冷窗光方向"],
+      "status": "repair-needed"
+    }
+  ],
+  "checked_categories": ["character", "face", "hair", "costume", "prop", "screen-direction", "eyeline", "action", "space", "time", "lighting", "weather", "emotion", "motivation", "axis", "camera-direction", "shot-size-jump", "frame-handoff", "focus", "edit", "prompt", "sound"],
+  "x_test_case": "多镜头角色和动作连续性审核"
+}

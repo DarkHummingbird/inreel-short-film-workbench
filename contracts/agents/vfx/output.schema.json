@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "视效输出",
+  "type": "object",
+  "properties": {
+    "status": {
+      "enum": [
+        "ok",
+        "needs_input",
+        "unsupported"
+      ]
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "shot_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+            },
+            "video_prompt": {
+              "type": "string",
+              "minLength": 1
+            },
+            "avoid": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            },
+            "first_frame_ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+            },
+            "reference_assets": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+              },
+              "minItems": 0
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "aspect_ratio": {
+              "enum": [
+                "9:16",
+                "16:9",
+                "1:1"
+              ]
+            }
+          },
+          "required": [
+            "shot_id",
+            "video_prompt",
+            "avoid",
+            "first_frame_ref",
+            "reference_assets",
+            "duration_ms",
+            "aspect_ratio"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "enum": [
+              "missing_input",
+              "conflicting_input",
+              "unsupported_capability",
+              "unverifiable",
+              "invalid_reference",
+              "timing_mismatch",
+              "continuity_risk",
+              "content_risk",
+              "format_risk",
+              "manual_review",
+              "assumption"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shot_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field",
+          "shot_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "status",
+    "result",
+    "issues"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ok"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "result": {
+            "type": "null"
+          },
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

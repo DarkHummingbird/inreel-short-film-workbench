@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "美术输入",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "brief",
+              "concept",
+              "script",
+              "storyboard",
+              "cut",
+              "language_assets",
+              "delivery",
+              "reference",
+              "media",
+              "policy"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          }
+        },
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "task_request": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mode": {
+      "enum": [
+        "character",
+        "keyframe",
+        "location",
+        "prop",
+        "location_view"
+      ]
+    },
+    "characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "character_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "goal": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "character_id",
+          "name",
+          "description",
+          "goal"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 2
+    },
+    "character_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "character_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "asset_ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          }
+        },
+        "required": [
+          "character_id",
+          "asset_ref"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "shot": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "shot_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+            },
+            "order": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "beat_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              "minItems": 1
+            },
+            "purpose": {
+              "type": "string",
+              "minLength": 1
+            },
+            "character_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              "minItems": 0,
+              "maxItems": 2
+            },
+            "scene": {
+              "type": "string",
+              "minLength": 1
+            },
+            "framing": {
+              "type": "string",
+              "minLength": 1
+            },
+            "camera": {
+              "type": "string",
+              "minLength": 1
+            },
+            "start_state": {
+              "type": "string",
+              "minLength": 1
+            },
+            "action": {
+              "type": "string",
+              "minLength": 1
+            },
+            "end_state": {
+              "type": "string",
+              "minLength": 1
+            },
+            "continuity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "dialogue": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "line_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                  },
+                  "speaker_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "line_id",
+                  "speaker_id",
+                  "text"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "shot_id",
+            "order",
+            "beat_ids",
+            "purpose",
+            "character_ids",
+            "scene",
+            "framing",
+            "camera",
+            "start_state",
+            "action",
+            "end_state",
+            "continuity",
+            "duration_ms",
+            "dialogue"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "visual_style": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aspect_ratio": {
+      "enum": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ]
+    }
+  },
+  "required": [
+    "project_id",
+    "sources",
+    "task_request",
+    "mode",
+    "characters",
+    "character_references",
+    "shot",
+    "visual_style",
+    "aspect_ratio"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "enum": [
+              "keyframe",
+              "location",
+              "prop",
+              "location_view"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "shot": {
+            "type": "object"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "shot": {
+            "type": "null"
+          },
+          "characters": {
+            "minItems": 1,
+            "maxItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

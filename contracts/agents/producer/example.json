@@ -1,0 +1,73 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "brief",
+        "ref": "brief@v1"
+      }
+    ],
+    "task_request": null,
+    "raw_brief": "真人 BL《末班车之后》；两位成年前任分手三个月。小林拖行李离开，阿哲到车站挽留。结尾别拍回头。36 秒竖屏，要中文、英文和泰语。 两人没有当场和好。",
+    "source_script": null,
+    "project_settings": {
+      "goal": "series_promotion",
+      "theme": "BL",
+      "target_duration_ms": 36000,
+      "aspect_ratio": "9:16",
+      "target_languages": [
+        "zh-CN",
+        "en",
+        "th"
+      ]
+    }
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "normalized_brief": {
+        "goal": "series_promotion",
+        "theme": "BL",
+        "premise": "阿哲追到车站出口，试图挽留即将离开的小林。",
+        "audience": "泰国短剧观众；同时验证中文、英文和泰文版本",
+        "hook": "前三秒看出有人要走、有人舍不得",
+        "ending_constraint": "停在小林听见挽留，保留是否回头的悬念",
+        "must_keep": [
+          "两位成年主角是分手三个月的前任",
+          "小林拖着行李离开",
+          "两人没有当场和好"
+        ],
+        "target_duration_ms": 36000,
+        "aspect_ratio": "9:16",
+        "target_languages": [
+          "zh-CN",
+          "en",
+          "th"
+        ]
+      },
+      "facts": [
+        {
+          "text": "两位成年前任分手三个月",
+          "source_quote": "两位成年前任分手三个月",
+          "origin": "provided"
+        }
+      ],
+      "missing_fields": [],
+      "proposed_characters": [
+        {
+          "character_id": "azhe",
+          "name": "阿哲",
+          "description": "成年男性，深蓝外套，空手",
+          "goal": "让小林再等一次"
+        },
+        {
+          "character_id": "xiaolin",
+          "name": "小林",
+          "description": "成年男性，浅灰外套，拖黑色行李箱",
+          "goal": "离开车站，不轻易回头"
+        }
+      ]
+    },
+    "issues": []
+  }
+}

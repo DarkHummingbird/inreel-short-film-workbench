@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "创意策划输出",
+  "type": "object",
+  "properties": {
+    "status": {
+      "enum": [
+        "ok",
+        "needs_input",
+        "unsupported"
+      ]
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "concepts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "concept_key": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "hook": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "character_goals": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "character_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                        },
+                        "goal": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "character_id",
+                        "goal"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "conflict": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "turn": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "ending": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "visual_motif": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "production_complexity": {
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "preserved_facts": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 0
+                  },
+                  "new_elements": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 0
+                  }
+                },
+                "required": [
+                  "concept_key",
+                  "title",
+                  "hook",
+                  "character_goals",
+                  "conflict",
+                  "turn",
+                  "ending",
+                  "visual_motif",
+                  "production_complexity",
+                  "preserved_facts",
+                  "new_elements"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 2,
+              "maxItems": 3
+            }
+          },
+          "required": [
+            "concepts"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "enum": [
+              "missing_input",
+              "conflicting_input",
+              "unsupported_capability",
+              "unverifiable",
+              "invalid_reference",
+              "timing_mismatch",
+              "continuity_risk",
+              "content_risk",
+              "format_risk",
+              "manual_review",
+              "assumption"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shot_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field",
+          "shot_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "status",
+    "result",
+    "issues"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ok"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "result": {
+            "type": "null"
+          },
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

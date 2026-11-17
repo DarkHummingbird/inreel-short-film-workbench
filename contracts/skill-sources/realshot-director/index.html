@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RealShot Director — 真人感视频 Prompt 导演</title>
+  <meta name="description" content="用自然语言描述你脑子里的视频，自动生成更像真人拍摄的 AI 视频提示词。" />
+  <style>
+    :root{
+      --bg:#0d0f12; --panel:#14171b; --panel2:#191d22; --line:#292e35;
+      --text:#f4f5f7; --muted:#8d949e; --soft:#b9bec5; --accent:#ff6b35;
+      --accent2:#ff8a5f; --ok:#79d69f; --shadow:0 22px 70px rgba(0,0,0,.32);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);
+      font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif}
+    body{
+      background:
+        radial-gradient(circle at 12% 0%, rgba(255,107,53,.13), transparent 28%),
+        radial-gradient(circle at 95% 8%, rgba(255,255,255,.05), transparent 23%),
+        var(--bg);
+    }
+    button,textarea,select,input{font:inherit}
+    .app{width:min(1440px,100%);min-height:100vh;margin:auto;padding:28px}
+    header{display:flex;align-items:center;justify-content:space-between;padding:4px 2px 26px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,var(--accent),#ff9c6d);
+      display:grid;place-items:center;font-weight:800;color:#111;box-shadow:0 8px 24px rgba(255,107,53,.22)}
+    .brand-text strong{display:block;font-size:15px;letter-spacing:.2px}
+    .brand-text span{font-size:12px;color:var(--muted)}
+    .header-note{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.02)}
+    .main{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.35fr);gap:20px;align-items:stretch}
+    .panel{background:rgba(20,23,27,.9);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .left{padding:34px;display:flex;flex-direction:column;min-height:calc(100vh - 118px)}
+    h1{margin:0;font-size:clamp(34px,4vw,58px);line-height:1.05;letter-spacing:-2px;max-width:700px}
+    h1 em{font-style:normal;color:var(--accent)}
+    .lead{color:var(--soft);font-size:15px;line-height:1.8;margin:18px 0 28px;max-width:650px}
+    .label{font-size:12px;color:var(--muted);margin-bottom:10px;letter-spacing:.4px}
+    textarea{
+      width:100%;min-height:200px;resize:vertical;border:1px solid #343a42;border-radius:18px;padding:20px;
+      color:var(--text);background:#101318;outline:none;line-height:1.75;transition:.2s;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.02)
+    }
+    textarea:focus{border-color:rgba(255,107,53,.72);box-shadow:0 0 0 4px rgba(255,107,53,.08)}
+    .examples{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+    .chip{border:1px solid var(--line);background:#15191e;color:#aeb4bc;padding:8px 10px;border-radius:999px;font-size:12px;cursor:pointer}
+    .chip:hover{border-color:#424850;color:#fff}
+    details{border-top:1px solid var(--line);margin-top:6px;padding-top:17px}
+    summary{cursor:pointer;color:#d7dbe0;font-size:13px;list-style:none;display:flex;align-items:center;justify-content:space-between}
+    summary::-webkit-details-marker{display:none}
+    summary::after{content:"＋";color:var(--muted);font-size:17px}
+    details[open] summary::after{content:"−"}
+    .advanced{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+    .field label{display:block;font-size:11px;color:var(--muted);margin:0 0 7px 2px}
+    select,input{
+      width:100%;background:#101318;color:#e9eaec;border:1px solid #30353c;border-radius:12px;padding:11px 12px;outline:none
+    }
+    .actions{display:flex;gap:10px;margin-top:auto;padding-top:24px}
+    .primary,.secondary{border:0;border-radius:14px;padding:14px 18px;cursor:pointer;font-weight:650}
+    .primary{flex:1;background:var(--accent);color:#111}
+    .primary:hover{background:var(--accent2)}
+    .secondary{background:#1a1e23;color:#d7dbe0;border:1px solid var(--line)}
+    .right{display:flex;flex-direction:column;min-height:calc(100vh - 118px)}
+    .result-head{padding:22px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:14px}
+    .result-title{font-size:14px;font-weight:700}
+    .result-meta{color:var(--muted);font-size:12px;margin-top:4px}
+    .copy{border:1px solid var(--line);color:#dfe2e6;background:#191d22;border-radius:11px;padding:9px 13px;cursor:pointer}
+    .copy:hover{border-color:#464c55}
+    .understanding{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;min-height:62px}
+    .tag{background:#111419;border:1px solid #2c3239;border-radius:999px;padding:7px 10px;color:#aeb5be;font-size:11px}
+    .tag b{color:#e7e9ec;font-weight:600}
+    pre{
+      margin:0;padding:26px 28px;white-space:pre-wrap;word-break:break-word;overflow:auto;flex:1;
+      color:#d8dce1;font:13px/1.82 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+      background:linear-gradient(180deg,#111419,#0f1216);
+    }
+    .empty{height:100%;display:grid;place-items:center;color:#737b85;text-align:center;padding:40px}
+    .empty strong{display:block;color:#bec4cb;margin-bottom:8px;font-size:15px}
+    footer{color:#666e77;font-size:11px;padding:16px 4px 0;text-align:right}
+    @media(max-width:960px){
+      .app{padding:16px}
+      .main{grid-template-columns:1fr}
+      .left,.right{min-height:auto}
+      h1{font-size:40px}
+      .actions{margin-top:22px}
+      .right{min-height:720px}
+      .header-note{display:none}
+    }
+    @media(max-width:560px){
+      .app{padding:10px}
+      header{padding:8px 4px 16px}
+      .left{padding:22px}
+      .result-head,.understanding{padding-left:18px;padding-right:18px}
+      pre{padding:22px 18px;font-size:12px}
+      .advanced{grid-template-columns:1fr}
+      h1{font-size:34px;letter-spacing:-1.2px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="mark">R</div>
+      <div class="brand-text"><strong>RealShot Director</strong><span>Natural Language → Realistic Video Prompt</span></div>
+    </div>
+    <div class="header-note">纯前端 · 不生成视频 · 不上传内容</div>
+  </header>
+
+  <main class="main">
+    <section class="panel left">
+      <h1>说人话，<br><em>让它替你当导演。</em></h1>
+      <p class="lead">不用填一堆专业参数。直接描述你脑子里的画面，RealShot 会自动补齐人物、场景、摄影机语言、时间轴和“去 AI 味”细节。</p>
+
+      <div class="label">描述你想拍的视频</div>
+      <textarea id="idea" placeholder="例如：一个广东女生早上出门买早餐，像小时候家里DV拍的那种，老城区，阳光很好，很生活化，不要AI感。"></textarea>
+
+      <div class="examples">
+        <button class="chip" data-text="一个广东女生早上出门买早餐，像小时候家里DV拍的那种，老城区，阳光很好，很生活化，不要AI感。">广东老城早餐</button>
+        <button class="chip" data-text="一个大学女生下雨天去便利店买东西，十几年前CCD录像的感觉，朋友随手跟拍，不要像广告。">雨天便利店</button>
+        <button class="chip" data-text="春节农村老家，家里人拿老摄像机拍一个年轻男生帮奶奶贴春联，真实家庭录像感。">春节家庭录像</button>
+      </div>
+
+      <details>
+        <summary>高级设置（可选）</summary>
+        <div class="advanced">
+          <div class="field">
+            <label>目标模型</label>
+            <select id="model">
+              <option value="自动">自动判断</option>
+              <option value="豆包">豆包</option>
+              <option value="Seedance">Seedance</option>
+              <option value="可灵">可灵</option>
+              <option value="Veo">Veo</option>
+              <option value="Sora">Sora</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>时长</label>
+            <select id="duration">
+              <option value="15">15 秒（默认）</option>
+              <option value="10">10 秒</option>
+              <option value="5">5 秒</option>
+              <option value="30">30 秒</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>画幅</label>
+            <select id="ratio">
+              <option value="9:16">9:16 竖屏</option>
+              <option value="16:9">16:9 横屏</option>
+              <option value="1:1">1:1 方形</option>
+              <option value="4:3">4:3</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>真人感</label>
+            <select id="realism">
+              <option value="自然纪实">自然纪实</option>
+              <option value="轻度真实">轻度真实</option>
+              <option value="原始随拍">原始随拍</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <div class="actions">
+        <button class="secondary" id="clear">清空</button>
+        <button class="primary" id="generate">生成 RealShot Prompt</button>
+      </div>
+    </section>
+
+    <section class="panel right">
+      <div class="result-head">
+        <div>
+          <div class="result-title">导演输出</div>
+          <div class="result-meta" id="meta">等待你的自然语言描述</div>
+        </div>
+        <button class="copy" id="copy">复制 Prompt</button>
+      </div>
+      <div class="understanding" id="understanding">
+        <span class="tag"><b>提示：</b>自然语言优先，参数只作为补充</span>
+      </div>
+      <div id="out" class="empty"><div><strong>这里会生成完整提示词</strong>人物一致性 · 场景锁定 · 摄影机行为 · 时间轴 · 去 AI 味</div></div>
+    </section>
+  </main>
+  <footer>RealShot Director · Local Prompt Composer</footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const idea = $('#idea'), out = $('#out'), meta = $('#meta'), understanding = $('#understanding');
+
+document.querySelectorAll('.chip').forEach(btn => {
+  btn.addEventListener('click', () => { idea.value = btn.dataset.text; idea.focus(); });
+});
+
+$('#clear').addEventListener('click', () => {
+  idea.value = '';
+  out.className = 'empty';
+  out.innerHTML = '<div><strong>这里会生成完整提示词</strong>人物一致性 · 场景锁定 · 摄影机行为 · 时间轴 · 去 AI 味</div>';
+  understanding.innerHTML = '<span class="tag"><b>提示：</b>自然语言优先，参数只作为补充</span>';
+  meta.textContent = '等待你的自然语言描述';
+});
+
+function infer(text){
+  const t = text.trim();
+
+  const subject = /男生|男人|男孩|男士/.test(t) ? '一位年轻中国男性' :
+                  /女生|女孩|女人|女性|小姐姐/.test(t) ? '一位年轻中国女性' : '一位年轻中国人';
+
+  let age = '20岁左右';
+  const ageMatch = t.match(/(\d{1,2})\s*岁/);
+  if(ageMatch) age = ageMatch[1] + '岁左右';
+  if(/大学|大学生/.test(t)) age = '19-22岁';
+
+  let location = '中国普通生活街区';
+  if(/广东|广州|佛山|潮汕|深圳|东莞|珠海/.test(t)) location = '广东老城区生活街巷';
+  if(/农村|老家|村里|乡下/.test(t)) location = '中国南方农村老家';
+  if(/便利店/.test(t)) location = '普通居民区附近的便利店与街道';
+  if(/学校|校园|大学/.test(t)) location = '中国大学校园与周边生活区';
+
+  let camera = '2000年代初期消费级家用 DV 摄像机';
+  if(/CCD|ccd/.test(t)) camera = '2008年前后消费级 CCD 数码相机视频模式';
+  if(/VHS|vhs|录像带/.test(t)) camera = '家用 VHS 摄像机';
+  if(/手机|iPhone|iphone/.test(t)) camera = '普通手机手持摄像';
+  if(/DV|dv|摄像机|家庭录像|小时候/.test(t)) camera = '2000年代初期消费级家用 DV 摄像机';
+
+  let time = '上午';
+  if(/早上|清晨|早餐|晨/.test(t)) time = '清晨到上午';
+  if(/中午/.test(t)) time = '中午';
+  if(/傍晚|黄昏/.test(t)) time = '傍晚';
+  if(/晚上|夜晚|半夜|宵夜/.test(t)) time = '夜晚';
+
+  let weather = '自然天气';
+  if(/下雨|雨天|雨/.test(t)) weather = '小雨或刚下过雨，地面有自然湿润反光';
+  else if(/阳光|晴天|太阳/.test(t)) weather = '晴朗自然光，树影或建筑阴影形成不规则光斑';
+  else if(/阴天/.test(t)) weather = '阴天柔和自然光';
+
+  let action = '进行一段普通、没有表演感的日常活动';
+  if(/早餐/.test(t)) action = '从家里出门，穿过老街，走到本地早餐档买早餐，再拿着早餐离开';
+  else if(/便利店/.test(t)) action = '撑伞或淋着小雨走到便利店，挑一件小东西付款后离开';
+  else if(/春联/.test(t)) action = '在家门口帮长辈准备并贴春联，中间有自然交流和停顿';
+  else if(/宵夜/.test(t)) action = '夜里从家出门，穿过普通街道去附近小店吃宵夜';
+
+  let style = '真实生活纪录片感';
+  if(/DV|dv|家庭录像|小时候|摄像机/.test(t)) style = '2000年代家庭 DV 录像感';
+  if(/CCD|ccd/.test(t)) style = '2000年代后期 CCD 随拍感';
+  if(/不要AI|不要 AI|真实|生活化|随手|朋友/.test(t)) style += '，强调非表演、非广告';
+
+  return {subject, age, location, camera, time, weather, action, style};
+}
+
+function splitTimeline(action, duration){
+  const d = Number(duration);
+  const seg = Math.max(1, Math.floor(d/5));
+  const end = n => String(Math.min(d,n)).padStart(2,'0');
+  let beats = [
+    '人物从环境中自然出现，先做一个无意义的小动作，例如整理头发、衣角、背包或看向街道；摄影师稍晚才把主体放回画面中心。',
+    '人物开始主要行动。摄影师边走边跟拍，构图不是一直稳定；当人物突然停下或转身时，镜头慢半拍跟上。',
+    '加入一个真实生活中的短暂停顿：等车、看菜单、找零钱、避让路人、低头看东西或与店主简单交流。不要正对镜头表演。',
+    '人物完成主要事件。自动对焦可以在人物和手中物品之间短暂切换一次，曝光在室内外或阴影切换时稍有呼吸。',
+    '人物继续向前走或离开场景。不要设计漂亮收尾，摄影师反应稍慢，最后像随手停止录像一样直接结束。'
+  ];
+  let lines = [];
+  for(let i=0;i<5;i++){
+    const start = Math.floor(i*d/5);
+    const stop = Math.floor((i+1)*d/5);
+    lines.push(`${String(start).padStart(2,'0')}:00-${String(stop).padStart(2,'0')}:00\n${beats[i]}`);
+  }
+  return lines.join('\n\n');
+}
+
+function buildPrompt(text){
+  const inf = infer(text);
+  const model = $('#model').value;
+  const duration = $('#duration').value;
+  const ratio = $('#ratio').value;
+  const realism = $('#realism').value;
+  const modelName = model === '自动' ? '豆包 / 主流视频生成模型' : model;
+
+  const prompt = `生成一段 ${duration} 秒、${ratio} 的超写实生活记录类视频。
+
+【原始意图】
+${text.trim()}
+
+【导演理解】
+主角：${inf.age}${inf.subject.replace('一位','')}
+场景：${inf.location}
+时间：${inf.time}
+天气与光线：${inf.weather}
+主要事件：${inf.action}
+摄影风格：${inf.style}
+目标模型：${modelName}
+真人感级别：${realism}
+
+【核心目标】
+最终画面必须像一个真实的人，用真实消费级设备随手记录身边人的生活，而不是 AI 广告、MV、短剧或精心设计的商业片。
+
+不要依赖“电影感、8K、超高清、完美光线”这类空泛形容词。
+真实感来自：人的犹豫、摄影师的反应延迟、轻微构图失败、自动对焦、曝光变化、环境干扰和无意义的小动作。
+
+【人物锁定】
+${inf.age}${inf.subject.replace('一位','')}。
+外貌自然、真实、不过度精致，不要网红脸，不要塑料皮肤，不要商业模特感。
+服装符合普通中国年轻人的真实日常穿着，颜色不过分鲜艳，不要奢侈品牌展示。
+整段视频必须保持同一张脸、同一年龄感、同一发型、同一套衣服、同一身材比例。
+人物不是在“演给镜头看”，而是在做自己的事情。
+
+【环境锁定】
+地点是${inf.location}。
+时间为${inf.time}，${inf.weather}。
+环境必须有真实生活痕迹：旧墙、路边小店、门口杂物、普通招牌、自行车/电动车、树木、电线、居民生活物件等，根据场景自然出现。
+不要把普通街区变成旅游景点、网红街区、商业广告布景。
+
+【摄影机系统】
+使用${inf.camera}的视觉逻辑。
+摄影者是人物认识的朋友或家人，手持记录，没有专业摄制组。
+
+只使用少量、自然的真实缺陷：
+- 轻微手持抖动，不要稳定器般丝滑
+- 构图偶尔偏离主体，人物不总在中心
+- 人物突然改变动作时，摄影师反应慢半拍
+- 自动对焦偶尔迟疑或短暂落错位置
+- 从阴影进入亮处时，自动曝光晚一点调整
+- 人物移动时有轻微自然运动模糊
+- 如果是老设备风格，色彩略褪、对比度稍低、保留轻微压缩与传感器质感
+
+不要故意把所有缺陷同时堆满，画面要像“偶然拍成这样”，而不是故意做坏。
+
+【人物行为规则】
+人物不要持续看镜头。
+人物不要一直微笑。
+人物不要每个动作都卡着镜头节奏。
+允许走神、停顿、整理头发/衣服、看向画面外、换重心、迟疑半秒。
+动作要有起势和收势，不要像动画角色一样从一个姿势瞬间切到另一个姿势。
+人物与环境发生关系，而不是只在镜头前展示自己。
+
+【时间轴】
+${splitTimeline(inf.action, duration)}
+
+【去 AI 味限制】
+禁止：
+永久微笑；
+持续眼神交流；
+完美居中构图；
+过度浅景深；
+现代手机 HDR 锐利感（除非用户明确要求）；
+商业美容磨皮；
+每个动作都精准卡点；
+稳定器级别丝滑运镜；
+毫无意义的电影级逆光；
+黄金时刻滤镜泛滥；
+慢动作摆拍；
+模特走秀感；
+人物每一秒都有动作；
+所有背景元素都“为剧情服务”。
+
+【最终目标感觉】
+观众应该觉得：
+“这是有人真实拍到的一小段生活录像。”
+
+而不是：
+“这是 AI 生成的一条复古风短片。”
+
+请优先保证：人物自然 > 摄影真实 > 场景可信 > 画面漂亮。`;
+
+  return {prompt, inf, modelName, duration, ratio};
+}
+
+$('#generate').addEventListener('click', () => {
+  const text = idea.value.trim();
+  if(!text){ idea.focus(); idea.style.borderColor='#ff6b35'; setTimeout(()=>idea.style.borderColor='',700); return; }
+  const r = buildPrompt(text);
+  out.className = '';
+  out.innerHTML = `<pre id="promptText"></pre>`;
+  $('#promptText').textContent = r.prompt;
+  meta.textContent = `${r.modelName} · ${r.duration}秒 · ${r.ratio} · 已自动补全导演参数`;
+  understanding.innerHTML = `
+    <span class="tag"><b>人物</b> ${r.inf.age}${r.inf.subject.replace('一位','')}</span>
+    <span class="tag"><b>场景</b> ${r.inf.location}</span>
+    <span class="tag"><b>设备</b> ${r.inf.camera}</span>
+    <span class="tag"><b>时间</b> ${r.inf.time}</span>
+    <span class="tag"><b>风格</b> ${r.inf.style}</span>`;
+});
+
+$('#copy').addEventListener('click', async () => {
+  const el = $('#promptText');
+  if(!el) return;
+  try{
+    await navigator.clipboard.writeText(el.textContent);
+    const btn = $('#copy'); const old = btn.textContent;
+    btn.textContent = '已复制'; btn.style.color = '#79d69f';
+    setTimeout(()=>{btn.textContent=old;btn.style.color='';},1200);
+  }catch(e){
+    const range = document.createRange(); range.selectNode(el);
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    document.execCommand('copy'); sel.removeAllRanges();
+  }
+});
+</script>
+</body>
+</html>

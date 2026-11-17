@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "编剧输出",
+  "type": "object",
+  "properties": {
+    "status": {
+      "enum": [
+        "ok",
+        "needs_input",
+        "unsupported"
+      ]
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "logline": {
+              "type": "string",
+              "minLength": 1
+            },
+            "hook": {
+              "type": "string",
+              "minLength": 1
+            },
+            "conflict": {
+              "type": "string",
+              "minLength": 1
+            },
+            "turn": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ending": {
+              "type": "string",
+              "minLength": 1
+            },
+            "characters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "character_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "goal": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "character_id",
+                  "name",
+                  "description",
+                  "goal"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "beats": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "beat_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                  },
+                  "scene": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "action": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "emotion": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "dialogue": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "line_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                        },
+                        "speaker_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                        },
+                        "text": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "line_id",
+                        "speaker_id",
+                        "text"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 0
+                  }
+                },
+                "required": [
+                  "beat_id",
+                  "scene",
+                  "action",
+                  "emotion",
+                  "dialogue"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            },
+            "preserved_facts": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            },
+            "new_elements": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "title",
+            "logline",
+            "hook",
+            "conflict",
+            "turn",
+            "ending",
+            "characters",
+            "beats",
+            "preserved_facts",
+            "new_elements"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "enum": [
+              "missing_input",
+              "conflicting_input",
+              "unsupported_capability",
+              "unverifiable",
+              "invalid_reference",
+              "timing_mismatch",
+              "continuity_risk",
+              "content_risk",
+              "format_risk",
+              "manual_review",
+              "assumption"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shot_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field",
+          "shot_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "status",
+    "result",
+    "issues"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ok"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "result": {
+            "type": "null"
+          },
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

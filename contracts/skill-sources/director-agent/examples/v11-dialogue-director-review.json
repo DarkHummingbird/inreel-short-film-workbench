@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.1.0",
+  "scene_id": "SC001",
+  "scene_intent": "审核双人共享画面的权力变化，并确认克制调度可由单次图生视频承载。",
+  "shots": [
+    {
+      "shot_id": "SC001_SH001",
+      "duration_sec": 6,
+      "narrative_function": "通过乙反复整理合同和甲抽走最上方一页，让否认被一个共享画面内的动作打断。",
+      "dramatic_subject": "两人的手对合同秩序的争夺",
+      "shot_size": "双人中近景含手部",
+      "camera_angle": "桌面斜侧平视",
+      "camera_height": "桌面以上0.5米",
+      "lens_intent": "自然压缩两人距离并保留合同方向。",
+      "camera_position": "行动轴同侧，甲左乙右",
+      "camera_movement": "静止，权力变化只由手部进入对方空间完成。",
+      "subject_action": ["乙对齐合同", "甲停一拍后抽走最上方一页", "乙抬眼"],
+      "blocking": ["甲在左侧后靠", "乙在右侧前倾", "合同位于两人之间偏右"],
+      "composition": "合同形成边界，甲的右手从左侧穿入乙的控制区。",
+      "foreground": "甲的右手与合同一角",
+      "background": "乙的脸与深夜暗窗",
+      "focus_strategy": "从合同抽动转焦到乙第一次抬眼。",
+      "lighting_intent": "顶灯锁定桌面，人物面部保持低对比。",
+      "sound_focus": "纸张摩擦、空调低鸣和动作后的静默",
+      "transition_in": "以乙对齐纸张的声音进入",
+      "transition_out": "停在乙抬眼后的静默",
+      "continuity_anchors": ["甲左乙右", "甲使用右手", "合同长边平行桌沿"],
+      "directorial_quality": {
+        "rating": "strong",
+        "dramatic_purpose": "动作使乙的否认第一次被外力打断。",
+        "narrative_value": "一个共享画面同时呈现甲的判断和乙的回避，无需正反打重复信息。",
+        "emotional_rhythm": "五秒克制重复后用一次抽纸和静默形成转折。",
+        "blocking": "甲从后靠变为伸手侵入，乙位置不变但控制范围被拿走。",
+        "camera_language": "静止机位把权力变化归因于表演而非摄影机强调。",
+        "editing_logic": "完整动作在同镜完成，乙抬眼提供明确出点。",
+        "summary": "镜头具有清楚的戏剧变化和独立叙事价值。"
+      },
+      "generation_feasibility": {
+        "rating": "high",
+        "character_count": 2,
+        "simultaneous_action_count": 1,
+        "hand_action_complexity": "medium",
+        "physical_contact": false,
+        "occlusion": "partial",
+        "turning_complexity": "none",
+        "fast_motion": false,
+        "camera_subject_concurrent_motion": false,
+        "large_view_change": false,
+        "identity_consistency_risk": "low",
+        "start_state_clarity": "clear",
+        "end_state_clarity": "clear",
+        "single_generation_capacity": "suitable",
+        "risks": ["甲的右手短暂遮挡合同边缘"],
+        "mitigations": ["使用锁定首帧明确两人左右与手的位置"],
+        "recommended_route": "锁定首帧的单次图生视频生成"
+      },
+      "revision_decision": {
+        "decision": "keep",
+        "problem": "没有需要改变镜头结构的问题。",
+        "impact": "保留共享画面可避免对话覆盖碎片化。",
+        "director_reason": "权力变化依赖两人的同步可见性。",
+        "ai_generation_reason": "人物少、机位静止、动作顺序单一且首尾明确。",
+        "revision_plan": "保留镜头，只用首帧锁定左右位置和合同朝向。",
+        "revised_shot_structure": [
+          {
+            "shot_id": "SC001_SH001",
+            "source_shot_ids": ["SC001_SH001"],
+            "narrative_function": "共享画面内完成合同控制权转移。",
+            "duration_sec": 6,
+            "start_state": "甲左后靠，乙右前倾并压住合同。",
+            "end_state": "甲右手拿走一页合同，乙双手停在空出的桌面并抬眼。",
+            "transition": "乙抬眼后的静默切出。"
+          }
+        ]
+      },
+      "image_prompt": "深夜办公室，甲在左乙在右，共享中近景，乙双手整理合同，甲右手准备抽走最上方一页，顶灯桌面光。",
+      "video_prompt": "Duration: 6s. Start: 甲在左侧后靠，乙在右侧前倾并双手对齐合同。 Subject action: 乙先对齐合同；甲停一拍后用右手抽走最上方一页；乙随后抬眼。 Camera: 静止在行动轴同侧的桌面斜侧。 Environment: 暗窗和办公室保持静止，只保留空调低鸣。 End: 合同页在甲右手，乙双手停在桌面并抬眼。 Handoff anchor: 甲右手合同、甲左乙右和乙建立的眼线。",
+      "negative_prompt": "人物换位，甲使用左手，合同旋转，机械正反打，手指畸变，光线跳变，文字，水印"
+    }
+  ],
+  "x_test_case": "双人对话镜头导演审核"
+}

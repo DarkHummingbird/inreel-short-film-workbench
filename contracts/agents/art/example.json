@@ -1,0 +1,83 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "storyboard",
+        "ref": "storyboard_draft@v1"
+      },
+      {
+        "kind": "reference",
+        "ref": "xiaolin_ref@v1"
+      }
+    ],
+    "task_request": null,
+    "mode": "keyframe",
+    "characters": [
+      {
+        "character_id": "xiaolin",
+        "name": "小林",
+        "description": "成年男性，浅灰外套，拖黑色行李箱",
+        "goal": "离开车站，不轻易回头"
+      }
+    ],
+    "character_references": [
+      {
+        "character_id": "xiaolin",
+        "asset_ref": "xiaolin_ref@v1"
+      }
+    ],
+    "shot": {
+      "shot_id": "S04",
+      "order": 4,
+      "beat_ids": [
+        "B04"
+      ],
+      "purpose": "迟疑",
+      "character_ids": [
+        "xiaolin"
+      ],
+      "scene": "夜间车站出口",
+      "framing": "手部特写",
+      "camera": "固定机位",
+      "start_state": "阿哲在两步之外站定，小林右手握行李杆",
+      "action": "小林握紧行李杆，阿哲在画外低声挽留。",
+      "end_state": "行李箱不动，小林保持背对阿哲",
+      "continuity": "保持站位与同一黑色行李箱；只按动作说明改变状态",
+      "duration_ms": 7000,
+      "dialogue": [
+        {
+          "line_id": "L03",
+          "speaker_id": "azhe",
+          "text": "先别走。"
+        }
+      ]
+    },
+    "visual_style": "真人、低饱和、夜间车站冷光",
+    "aspect_ratio": "9:16"
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "mode": "keyframe",
+      "image_prompt": "9:16 真人特写。小林浅灰外套袖口入画，右手停在黑色行李杆，车站冷光从左侧照入。阿哲在画外。",
+      "avoid": [
+        "改变持物手",
+        "新增人物或行李箱",
+        "文字水印"
+      ],
+      "reference_map": [
+        {
+          "character_id": "xiaolin",
+          "asset_ref": "xiaolin_ref@v1"
+        }
+      ],
+      "composition": "固定机位手部近景，右手和箱杆在中央",
+      "continuity_checks": [
+        "行李箱保持黑色",
+        "浅灰袖口与前镜一致"
+      ]
+    },
+    "issues": []
+  }
+}

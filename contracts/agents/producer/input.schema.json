@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "制片输入",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "brief",
+              "concept",
+              "script",
+              "storyboard",
+              "cut",
+              "language_assets",
+              "delivery",
+              "reference",
+              "media",
+              "policy"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          }
+        },
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "task_request": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "raw_brief": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_script": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "project_settings": {
+      "type": "object",
+      "properties": {
+        "goal": {
+          "enum": [
+            "original_validation",
+            "series_promotion"
+          ]
+        },
+        "theme": {
+          "anyOf": [
+            {
+              "enum": [
+                "BL",
+                "GL"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target_duration_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "aspect_ratio": {
+          "enum": [
+            "9:16",
+            "16:9",
+            "1:1"
+          ]
+        },
+        "target_languages": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "zh-CN",
+              "en",
+              "th"
+            ]
+          },
+          "uniqueItems": true,
+          "maxItems": 3
+        }
+      },
+      "required": [
+        "goal",
+        "theme",
+        "target_duration_ms",
+        "aspect_ratio",
+        "target_languages"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "project_id",
+    "sources",
+    "task_request",
+    "raw_brief",
+    "source_script",
+    "project_settings"
+  ],
+  "additionalProperties": false
+}

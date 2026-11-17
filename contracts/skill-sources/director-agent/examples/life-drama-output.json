@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "full-package",
+  "project": {
+    "title": "带伞",
+    "format": "animation-film",
+    "genre": ["生活剧情", "家庭"],
+    "target_duration_sec": 480,
+    "aspect_ratio": "16:9",
+    "visual_strategy": "以厨房纵深和门口行李维持两人之间的未说出口距离，直到递伞动作才压缩空间。",
+    "director_intent": "让观众先从回避动作读到离别，再让递伞成为双方唯一允许发生的身体接近。"
+  },
+  "input_assessment": {
+    "input_kind": "scene",
+    "completeness": "partial",
+    "explicit_facts": ["雨夜厨房", "母亲修旧伞", "成年女儿准备离家", "场景约30秒"],
+    "reasonable_inferences": ["女儿拖延拿行李表示不愿先结束关系"],
+    "director_suggestions": ["不使用煽情音乐，让雨声和伞骨摩擦承担情绪"]
+  },
+  "dramatic_analysis": {
+    "theme": "亲密关系中的克制告别",
+    "central_conflict": "两人都想延长告别，却都不愿先说出挽留或不舍。",
+    "audience_experience": "先观察日常动作中的回避，再在递伞时感到被压住的亲密突然变得可见。",
+    "emotional_arc": ["克制", "拖延", "短暂靠近", "未完成的告别"],
+    "narrative_risks": ["过早切特写会替人物宣布情绪", "音乐会削弱动作中的留白"]
+  },
+  "characters": [
+    {
+      "character_id": "CH001",
+      "name": "母亲",
+      "objective": "在不挽留的前提下继续照顾女儿",
+      "inner_need": "允许自己承认离别会造成失落",
+      "emotional_state": "用修伞压住不舍",
+      "performance_rules": ["说话时看伞骨而不是女儿", "递伞前停半个呼吸再抬眼"],
+      "visual_anchors": ["深蓝针织衫", "右手持旧伞木柄"]
+    },
+    {
+      "character_id": "CH002",
+      "name": "女儿",
+      "objective": "等到母亲给出一个留下或回来的理由",
+      "inner_need": "主动承认自己舍不得离开",
+      "emotional_state": "站在门边却不触碰行李",
+      "performance_rules": ["听到问话先看行李再看伞", "接伞时手指短暂停在母亲手旁"],
+      "visual_anchors": ["米色风衣", "黑色行李箱停在门框右侧"]
+    }
+  ],
+  "scenes": [
+    {
+      "scene_id": "SC001",
+      "slugline": "内景·厨房·雨夜",
+      "location": "旧公寓厨房与玄关相连处",
+      "time": "夜",
+      "dramatic_purpose": "把双方拒绝说出的挽留转化为一把伞的交接。",
+      "scene_objective": "女儿等待母亲打破克制，母亲用照顾代替挽留。",
+      "turning_point": "母亲终于停止修伞并把伞横过两人之间。",
+      "start_emotion": "以日常动作掩饰离别",
+      "end_emotion": "彼此承认但仍未说破的不舍",
+      "blocking_plan": ["母亲在画面左侧餐桌，女儿在右后方门框，行李在女儿右侧", "递伞时母亲第一次跨出餐桌区域，女儿仍不拿行李"],
+      "lighting_plan": "左侧厨房暖灯照母亲，右侧玄关冷雨反光包住女儿；递伞时伞进入两种色温交界。",
+      "sound_plan": "保留窗外雨声、伞骨轻响和出租车远处短促鸣笛；不进音乐，交接后短暂只留雨声。",
+      "shots": [
+        {
+          "shot_id": "SC001_SH001",
+          "duration_sec": 8,
+          "narrative_function": "建立两人都在拖延的共同空间，并让行李未被触碰成为叙事证据。",
+          "dramatic_subject": "餐桌与门口之间被维持的距离",
+          "shot_size": "双人中全景",
+          "camera_angle": "平视侧前方",
+          "camera_height": "坐姿眼高略上",
+          "lens_intent": "自然透视保留厨房到玄关的纵深，不压缩双方距离。",
+          "camera_position": "行动轴同侧，厨房入口左前方",
+          "camera_movement": "静止，让人物是否跨越空间成为唯一变化。",
+          "subject_action": ["母亲拨正一根伞骨", "女儿说出租车到了", "女儿看向行李但没有伸手"],
+          "blocking": ["母亲左前景坐于桌边", "女儿右后景停在门框", "黑色行李箱位于女儿右侧"],
+          "composition": "桌沿与门框形成两个互不相交的空间盒，旧伞斜线指向女儿。",
+          "performance_beats": ["母亲听到出租车时手停半拍但不抬头", "女儿说完后把重心从门外侧脚移回室内侧脚"],
+          "foreground": "虚化的水杯边缘",
+          "background": "冷色玄关和门边行李",
+          "focus_strategy": "深焦同时保留母亲手部、女儿与行李的可读性。",
+          "lighting_intent": "暖厨房与冷玄关分隔两人，伞面接住微弱冷反光。",
+          "sound_focus": "雨声、金属伞骨轻响、远处一次鸣笛",
+          "transition_in": "由厨房窗上雨滴的声音先行进入",
+          "transition_out": "在母亲停止拨动伞骨的动作停点切出",
+          "continuity_anchors": ["母亲右手握木柄", "女儿面向画面左侧", "行李保持在门框右侧"],
+          "image_prompt": "雨夜旧公寓厨房与玄关，同框的母亲和成年女儿，母亲左前景桌边修旧伞，女儿右后景门框旁，黑色行李未被触碰，暖厨房与冷玄关分区，自然写实动画构图。",
+          "video_prompt": "Duration: 8s. Start: 母亲左前景坐在桌边，右手握旧伞木柄，女儿右后景站在门框旁，黑色行李在她右侧。 Subject action: 母亲先拨正一根伞骨；女儿说完话后看向行李但不伸手；母亲的手停半拍。 Camera: 静止在行动轴同侧的厨房入口，平视双人中全景。 Environment: 窗外雨影缓慢流动，室内其他物体静止。 End: 母亲的手停在伞骨上，女儿重心回到室内侧脚，行李未动。 Handoff anchor: 母亲停止拨伞骨的右手与女儿向左的视线。",
+          "negative_prompt": "人物身份或服装变化，行李移动，左右方向反转，突然推镜，额外人物，手指畸变，伞形态漂移，光线跳变，文字，水印"
+        },
+        {
+          "shot_id": "SC001_SH002",
+          "duration_sec": 6,
+          "narrative_function": "用递伞动作完成第一次空间接近，使照顾成为未说出口的挽留。",
+          "dramatic_subject": "两只手在伞柄附近短暂共处",
+          "shot_size": "双人中近景偏手部",
+          "camera_angle": "平视轻侧面",
+          "camera_height": "胸口高度",
+          "lens_intent": "轻度压缩两人距离，同时保留门框作为离别边界。",
+          "camera_position": "延续行动轴同侧，从桌边向门框方向看",
+          "camera_movement": "母亲起身递伞时缓慢前移半步，手相遇即停。",
+          "subject_action": ["母亲起身横递旧伞", "女儿先看伞再抬眼", "女儿接住伞柄但暂不收手"],
+          "blocking": ["母亲从左侧跨出桌边区域", "女儿留在门框内侧", "伞柄停在两人中央"],
+          "composition": "门框仍在女儿身后，伞柄横向连接两人，两只手位于画面下部中心。",
+          "performance_beats": ["母亲递出前停半个呼吸", "女儿接触伞柄后才抬眼", "双方同时避免用力拉走伞"],
+          "foreground": "画面下缘的桌角退出构图",
+          "background": "冷色门框与静止行李",
+          "focus_strategy": "先在伞柄与手，女儿抬眼时轻转焦至两人眼线。",
+          "lighting_intent": "伞柄处于冷暖交界，人物面部维持各自色温。",
+          "sound_focus": "衣料摩擦、木柄轻碰、持续雨声，鸣笛不再出现",
+          "transition_in": "匹配母亲停止的右手，从静止恢复为递出动作",
+          "transition_out": "两人仍共同握伞时以雨声延续切出",
+          "continuity_anchors": ["母亲从画面左向右递伞", "女儿右手接木柄", "行李仍在门框右侧", "雨声连续"],
+          "image_prompt": "雨夜厨房门口，母亲从左侧递出旧伞，成年女儿在右侧门框内接住木柄，两只手短暂相邻，黑色行李仍在右后方，冷暖光交界，克制写实动画。",
+          "video_prompt": "Duration: 6s. Start: 母亲在画面左侧刚停止修伞，右手握木柄，女儿在右侧门框内看着伞，行李静止。 Subject action: 母亲先停半个呼吸再起身递伞；女儿先看伞再抬眼，然后用右手接住木柄并暂不收回。 Camera: 在行动轴同侧随母亲递伞缓慢前移半步，双手相遇时停止，随后轻转焦至眼线。 Environment: 雨影持续，门框和行李不动。 End: 两人共同握住伞柄，目光刚相遇，母亲在左、女儿在右。 Handoff anchor: 共同握住的木柄、女儿向左的视线与连续雨声。",
+          "negative_prompt": "伞突然开合，人物换手，行李位移，屏幕方向反转，快速变焦，过度哭泣，新增对白口型，身份漂移，额外手指，光线改变，文字，水印"
+        }
+      ]
+    }
+  ],
+  "continuity": {
+    "screen_direction": ["母亲始终在画面左侧，女儿在右侧", "递伞方向为左向右"],
+    "character_state": ["母亲从低头修伞变为抬眼递伞", "女儿始终没有触碰行李"],
+    "props": ["旧伞木柄先在母亲右手，第二镜由女儿右手接触", "黑色行李保持门框右侧"],
+    "costume": ["母亲深蓝针织衫", "女儿米色风衣"],
+    "lighting": ["母亲暖光、女儿冷反光，伞处于交界"],
+    "environment": ["雨势和窗外雨影速度连续"]
+  },
+  "review": {
+    "critical_issues": [],
+    "major_issues": [],
+    "minor_issues": [],
+    "recommendations": [
+      {
+        "issue_id": "ISS001",
+        "severity": "suggestion",
+        "category": "sound",
+        "location": "SC001_SH002",
+        "evidence": "第二镜的情绪转折已由动作和静默承担。",
+        "impact": "加入音乐可能提前替观众解释情绪。",
+        "fix": "保持无音乐，让雨声延续到下一场。"
+      }
+    ]
+  },
+  "open_questions": ["出租车鸣笛是否为剧本锁定事件，若不是可删除以进一步克制。"]
+}

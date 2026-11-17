@@ -1,0 +1,51 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "script",
+        "ref": "script@v1"
+      }
+    ],
+    "task_request": null,
+    "artifact_ref": "script@v1",
+    "artifact_kind": "script",
+    "fragments": [
+      {
+        "fragment_id": "B05",
+        "text": "小林回头抱住阿哲。"
+      }
+    ],
+    "media": [],
+    "project_constraints": [
+      "停在小林听见挽留，保留是否回头的悬念"
+    ],
+    "rules": [],
+    "rule_profile_ref": null
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "artifact_ref": "script@v1",
+      "findings": [
+        {
+          "category": "project_constraint",
+          "rule_id": null,
+          "fragment_id": "B05",
+          "shot_id": null,
+          "evidence": "小林回头抱住阿哲。",
+          "status": "observed",
+          "severity": "warning",
+          "suggestion": "改为只停步，保持是否回头的悬念。",
+          "asset_ref": null,
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "manual_checks": [
+        "未提供平台规则，运营按实际发布要求复核。"
+      ]
+    },
+    "issues": []
+  }
+}

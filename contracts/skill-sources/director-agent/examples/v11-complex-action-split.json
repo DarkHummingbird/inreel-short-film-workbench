@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.1.0",
+  "scene_id": "SC002",
+  "scene_intent": "审核四人同时抢夺数据盒的单镜头，并拆成两个具有不同戏剧主体的镜头。",
+  "shots": [
+    {
+      "shot_id": "SC002_SH001",
+      "duration_sec": 9,
+      "narrative_function": "原方案试图同时交代抢夺、遮挡、转身、追击和出口关闭。",
+      "dramatic_subject": "数据盒归属与逃生方向",
+      "shot_size": "移动中全景",
+      "camera_angle": "腰平视",
+      "camera_height": "1.1米",
+      "lens_intent": "保留四人空间关系。",
+      "camera_position": "走廊左侧沿运动方向后退",
+      "camera_movement": "先后退再绕到持盒者侧面。",
+      "subject_action": ["四人同时冲向数据盒", "两人发生接触", "持盒者转身冲向出口", "追击者横穿前景"],
+      "blocking": ["四人从走廊两端汇聚", "出口在画面右端"],
+      "composition": "群体汇聚后重心转向右侧出口。",
+      "foreground": "横穿的追击者",
+      "background": "正在关闭的出口",
+      "focus_strategy": "从数据盒转到持盒者，再转到出口。",
+      "lighting_intent": "红色警报光维持方向。",
+      "sound_focus": "脚步、碰撞、警报和门体机械声",
+      "transition_in": "警报声先行",
+      "transition_out": "持盒者冲出时切出",
+      "continuity_anchors": ["数据盒最初在地面中央", "出口位于画面右侧", "持盒者最终右手持盒"],
+      "directorial_quality": {
+        "rating": "workable",
+        "dramatic_purpose": "数据盒转手和逃生方向都具有必要信息。",
+        "narrative_value": "群体汇聚展示竞争关系，但后半段的逃生是新的戏剧主体。",
+        "emotional_rhythm": "抢夺与逃生连续堆叠，没有给观众确认归属的时间。",
+        "blocking": "四人同时穿越和接触使关键动作被遮挡。",
+        "camera_language": "后退加绕行同时发生，注意力从数据盒、人物到出口频繁切换。",
+        "editing_logic": "数据盒被拿起后存在自然切点，原方案没有利用。",
+        "summary": "前后两个有效节拍被压进一个镜头，应按戏剧主体拆分。"
+      },
+      "generation_feasibility": {
+        "rating": "low",
+        "character_count": 4,
+        "simultaneous_action_count": 5,
+        "hand_action_complexity": "high",
+        "physical_contact": true,
+        "occlusion": "major",
+        "turning_complexity": "complex",
+        "fast_motion": true,
+        "camera_subject_concurrent_motion": true,
+        "large_view_change": true,
+        "identity_consistency_risk": "high",
+        "start_state_clarity": "clear",
+        "end_state_clarity": "partial",
+        "single_generation_capacity": "unsuitable",
+        "risks": ["多人接触与前景遮挡会破坏数据盒持手", "绕行时人物身份和出口方向易漂移"],
+        "mitigations": ["在数据盒被拿起的动作停点切镜", "第二镜用锁定首帧明确右手持盒与右向运动"],
+        "recommended_route": "拆成两个独立镜头并分别图生视频"
+      },
+      "revision_decision": {
+        "decision": "split",
+        "problem": "一个镜头包含抢夺归属和逃生追击两个独立注意中心。",
+        "impact": "观众难以确认数据盒归属，生成也难以维持四人身份和持手。",
+        "director_reason": "数据盒被拿起是明确的信息切点，切后可把观众注意力转向出口。",
+        "ai_generation_reason": "拆分后每段减少人物数量、接触、遮挡和摄影机复合运动。",
+        "revision_plan": "第一镜固定广角完成三人围抢与右手拿盒；第二镜从该右手和右向视线匹配进入双人追击。",
+        "revised_shot_structure": [
+          {
+            "shot_id": "SC002_SH001",
+            "source_shot_ids": ["SC002_SH001"],
+            "narrative_function": "明确谁取得数据盒。",
+            "duration_sec": 4,
+            "start_state": "数据盒在地面中央，三人从三侧接近。",
+            "end_state": "持盒者右手抓住数据盒并看向右侧出口。",
+            "transition": "在右手抬盒和右向视线上动作切。"
+          },
+          {
+            "shot_id": "SC002_SH002",
+            "source_shot_ids": ["SC002_SH001"],
+            "narrative_function": "把数据盒归属转化为向出口的追击。",
+            "duration_sec": 5,
+            "start_state": "持盒者右手持盒向右起跑，一名追击者从左后方进入。",
+            "end_state": "持盒者抵达右侧出口，追击者仍落后一身位。",
+            "transition": "出口门体下降形成下一镜遮挡。"
+          }
+        ]
+      },
+      "timeline_beats": [
+        {"start_sec": 0, "end_sec": 3, "subject_action": "四人向中央数据盒汇聚。", "camera_action": "沿走廊缓慢后退。", "environment_action": "红色警报灯闪烁。", "expression_change": "持盒者从警觉转为决断。", "continuity_anchor": "数据盒仍在地面中央。"},
+        {"start_sec": 3, "end_sec": 5, "subject_action": "持盒者用右手拿起数据盒。", "camera_action": "停止后退并保持画面稳定。", "environment_action": "出口开始下降。", "expression_change": "持盒者视线转向右侧出口。", "continuity_anchor": "右手持盒，出口在右。"},
+        {"start_sec": 5, "end_sec": 9, "subject_action": "持盒者向右跑，追击者从左后方跟进。", "camera_action": "侧向跟随，不再绕行。", "environment_action": "出口继续下降。", "expression_change": "持盒者保持紧张专注。", "continuity_anchor": "结束时右手持盒且运动方向向右。"}
+      ],
+      "end_state": "持盒者右手持数据盒向右接近出口，一名追击者落后一身位，出口仍在下降。",
+      "image_prompt": "警报走廊四人围绕地面数据盒汇聚，出口在右侧，红色警报光，中全景。",
+      "video_prompt": "Duration: 9s. Start: 四人在走廊两端朝中央数据盒汇聚，出口位于右侧。 Subject action: 四人先靠近；持盒者随后用右手拿盒并向右奔跑；一名追击者从左后方跟进。 Camera: 先缓慢后退，拿盒时停止，随后向右侧向跟随。 Environment: 红灯闪烁，右侧出口持续下降。 End: 持盒者右手持盒接近右侧出口，追击者落后一身位。 Handoff anchor: 右手数据盒、右向运动和下降出口。",
+      "negative_prompt": "数据盒换手，人物身份融合，出口换边，动作方向反转，多余肢体，摄影机环绕，文字，水印"
+    }
+  ],
+  "x_test_case": "多人物复杂动作镜头拆分"
+}

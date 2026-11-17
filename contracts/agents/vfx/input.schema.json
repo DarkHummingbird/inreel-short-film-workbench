@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "视效输入",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "brief",
+              "concept",
+              "script",
+              "storyboard",
+              "cut",
+              "language_assets",
+              "delivery",
+              "reference",
+              "media",
+              "policy"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          }
+        },
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "task_request": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "approved_shot": {
+      "type": "object",
+      "properties": {
+        "shot_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "beat_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "minItems": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "character_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "minItems": 0,
+          "maxItems": 2
+        },
+        "scene": {
+          "type": "string",
+          "minLength": 1
+        },
+        "framing": {
+          "type": "string",
+          "minLength": 1
+        },
+        "camera": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start_state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "end_state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "continuity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dialogue": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "line_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              "speaker_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "line_id",
+              "speaker_id",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "shot_id",
+        "order",
+        "beat_ids",
+        "purpose",
+        "character_ids",
+        "scene",
+        "framing",
+        "camera",
+        "start_state",
+        "action",
+        "end_state",
+        "continuity",
+        "duration_ms",
+        "dialogue"
+      ],
+      "additionalProperties": false
+    },
+    "keyframe_ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+    },
+    "character_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "character_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+          },
+          "asset_ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
+          }
+        },
+        "required": [
+          "character_id",
+          "asset_ref"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "first_frame": {
+          "type": "boolean"
+        },
+        "character_references": {
+          "type": "boolean"
+        },
+        "supported_durations_ms": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 1
+        },
+        "aspect_ratios": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "9:16",
+              "16:9",
+              "1:1"
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "first_frame",
+        "character_references",
+        "supported_durations_ms",
+        "aspect_ratios"
+      ],
+      "additionalProperties": false
+    },
+    "aspect_ratio": {
+      "enum": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ]
+    }
+  },
+  "required": [
+    "project_id",
+    "sources",
+    "task_request",
+    "approved_shot",
+    "keyframe_ref",
+    "character_references",
+    "capabilities",
+    "aspect_ratio"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,7 @@
+{
+  "name": "realshot-director",
+  "version": "0.1.0",
+  "description": "Natural-language-first realistic AI video prompt director. Pure frontend, no API key required.",
+  "entry": "index.html",
+  "deployment": "netlify-static"
+}

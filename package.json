@@ -1,0 +1,16 @@
+{
+  "name": "short-film-workbench",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --experimental-transform-types src/server.ts",
+    "test": "node --experimental-transform-types --test test/*.test.ts",
+    "sample:real": "node --experimental-transform-types scripts/real-sample.ts"
+  },
+  "dependencies": {
+    "ajv": "8.20.0"
+  }
+}

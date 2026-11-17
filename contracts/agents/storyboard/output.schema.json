@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "分镜师输出",
+  "type": "object",
+  "properties": {
+    "status": {
+      "enum": [
+        "ok",
+        "needs_input",
+        "unsupported"
+      ]
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "total_duration_ms": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "shots": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "shot_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                  },
+                  "order": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "beat_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                    },
+                    "minItems": 1
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "character_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                    },
+                    "minItems": 0,
+                    "maxItems": 2
+                  },
+                  "scene": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "framing": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "camera": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "start_state": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "action": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "end_state": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "continuity": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "duration_ms": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "dialogue": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "line_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                        },
+                        "speaker_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+                        },
+                        "text": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "line_id",
+                        "speaker_id",
+                        "text"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 0
+                  }
+                },
+                "required": [
+                  "shot_id",
+                  "order",
+                  "beat_ids",
+                  "purpose",
+                  "character_ids",
+                  "scene",
+                  "framing",
+                  "camera",
+                  "start_state",
+                  "action",
+                  "end_state",
+                  "continuity",
+                  "duration_ms",
+                  "dialogue"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "total_duration_ms",
+            "shots"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "enum": [
+              "missing_input",
+              "conflicting_input",
+              "unsupported_capability",
+              "unverifiable",
+              "invalid_reference",
+              "timing_mismatch",
+              "continuity_risk",
+              "content_risk",
+              "format_risk",
+              "manual_review",
+              "assumption"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shot_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field",
+          "shot_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "status",
+    "result",
+    "issues"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ok"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "result": {
+            "type": "null"
+          },
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

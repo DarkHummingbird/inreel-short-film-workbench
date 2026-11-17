@@ -1,0 +1,91 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "storyboard",
+        "ref": "storyboard@v1"
+      },
+      {
+        "kind": "media",
+        "ref": "S04_video@v1"
+      }
+    ],
+    "task_request": null,
+    "shot": {
+      "shot_id": "S04",
+      "order": 4,
+      "beat_ids": [
+        "B04"
+      ],
+      "purpose": "迟疑",
+      "character_ids": [
+        "xiaolin"
+      ],
+      "scene": "夜间车站出口",
+      "framing": "手部特写",
+      "camera": "固定机位",
+      "start_state": "阿哲在两步之外站定，小林右手握行李杆",
+      "action": "小林握紧行李杆，阿哲在画外低声挽留。",
+      "end_state": "行李箱不动，小林保持背对阿哲",
+      "continuity": "保持站位与同一黑色行李箱；只按动作说明改变状态",
+      "duration_ms": 7000,
+      "dialogue": [
+        {
+          "line_id": "L03",
+          "speaker_id": "azhe",
+          "text": "先别走。"
+        }
+      ]
+    },
+    "asset": {
+      "asset_ref": "S04_video@v1",
+      "available_to_model": false,
+      "kind": "video",
+      "duration_ms": 7000
+    },
+    "observations": [
+      {
+        "start_ms": 3000,
+        "end_ms": 3400,
+        "note": "编导标注：行李杆在收紧动作时弯折变形。",
+        "source": "human_note"
+      }
+    ],
+    "checks": [
+      "action",
+      "continuity",
+      "identity"
+    ]
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "shot_id": "S04",
+      "asset_ref": "S04_video@v1",
+      "findings": [
+        {
+          "category": "continuity",
+          "confidence": "medium",
+          "status": "observed",
+          "evidence": "编导标注：行李杆在收紧动作时弯折变形。",
+          "start_ms": 3000,
+          "end_ms": 3400,
+          "suggestion": "核对该区间；确认后仅重抽 S04。",
+          "evidence_source": "human_note"
+        }
+      ],
+      "unverified_checks": [
+        "身份及画面其他区域需人工复核"
+      ]
+    },
+    "issues": [
+      {
+        "code": "unverifiable",
+        "message": "仅有编导标注，未读取视频。",
+        "field": "asset",
+        "shot_id": "S04"
+      }
+    ]
+  }
+}

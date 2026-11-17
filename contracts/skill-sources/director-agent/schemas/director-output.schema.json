@@ -1,0 +1,324 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haoink.local/schemas/director-output.schema.json",
+  "title": "Director Agent full output",
+  "type": "object",
+  "required": ["schema_version", "mode", "project", "input_assessment", "dramatic_analysis", "characters", "scenes", "continuity", "review", "open_questions"],
+  "properties": {
+    "schema_version": {"type": "string", "enum": ["1.0.0", "1.1.0"]},
+    "mode": {"type": "string", "enum": ["director-analysis", "scene-direction", "storyboard-planning", "video-prompt", "continuity-review", "director-review", "storyboard-revision", "generation-feasibility-review", "continuous-shot-planning", "multi-shot-continuity", "model-adaptation", "full-package"]},
+    "project": {"$ref": "#/$defs/project"},
+    "input_assessment": {"$ref": "#/$defs/inputAssessment"},
+    "dramatic_analysis": {"$ref": "#/$defs/dramaticAnalysis"},
+    "characters": {"type": "array", "items": {"$ref": "#/$defs/character"}},
+    "scenes": {"type": "array", "items": {"$ref": "#/$defs/scene"}},
+    "continuity": {"$ref": "#/$defs/continuity"},
+    "review": {"$ref": "#/$defs/review"},
+    "open_questions": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  },
+  "patternProperties": {"^x_": {}},
+  "additionalProperties": false,
+  "$defs": {
+    "string": {"type": "string", "minLength": 1},
+    "stringArray": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "project": {
+      "type": "object",
+      "required": ["title", "format", "genre", "target_duration_sec", "aspect_ratio", "visual_strategy", "director_intent"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "format": {"type": "string", "enum": ["animation-film", "live-action-film", "short-film", "commercial", "music-video", "short-drama", "social-video", "game-cinematic"]},
+        "genre": {"$ref": "#/$defs/stringArray"},
+        "target_duration_sec": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "aspect_ratio": {"type": "string", "minLength": 1},
+        "visual_strategy": {"type": "string", "minLength": 1},
+        "director_intent": {"type": "string", "minLength": 1}
+      },
+      "patternProperties": {"^x_": {}},
+      "additionalProperties": false
+    },
+    "inputAssessment": {
+      "type": "object",
+      "required": ["input_kind", "completeness", "explicit_facts", "reasonable_inferences", "director_suggestions"],
+      "properties": {
+        "input_kind": {"type": "string", "enum": ["story", "script", "scene", "shot", "reference-image", "reference-video-description", "revision-request"]},
+        "completeness": {"type": "string", "enum": ["complete", "partial", "minimal"]},
+        "explicit_facts": {"$ref": "#/$defs/stringArray"},
+        "reasonable_inferences": {"$ref": "#/$defs/stringArray"},
+        "director_suggestions": {"$ref": "#/$defs/stringArray"}
+      },
+      "additionalProperties": false
+    },
+    "dramaticAnalysis": {
+      "type": "object",
+      "required": ["theme", "central_conflict", "audience_experience", "emotional_arc", "narrative_risks"],
+      "properties": {
+        "theme": {"$ref": "#/$defs/string"},
+        "central_conflict": {"$ref": "#/$defs/string"},
+        "audience_experience": {"$ref": "#/$defs/string"},
+        "emotional_arc": {"$ref": "#/$defs/stringArray"},
+        "narrative_risks": {"$ref": "#/$defs/stringArray"}
+      },
+      "additionalProperties": false
+    },
+    "character": {
+      "type": "object",
+      "required": ["character_id", "name", "objective", "inner_need", "emotional_state", "performance_rules", "visual_anchors"],
+      "properties": {
+        "character_id": {"type": "string", "pattern": "^CH[0-9]{3}$"},
+        "name": {"$ref": "#/$defs/string"},
+        "objective": {"$ref": "#/$defs/string"},
+        "inner_need": {"$ref": "#/$defs/string"},
+        "emotional_state": {"$ref": "#/$defs/string"},
+        "performance_rules": {"$ref": "#/$defs/stringArray"},
+        "visual_anchors": {"$ref": "#/$defs/stringArray"}
+      },
+      "additionalProperties": false
+    },
+    "scene": {
+      "type": "object",
+      "required": ["scene_id", "slugline", "location", "time", "dramatic_purpose", "scene_objective", "turning_point", "start_emotion", "end_emotion", "blocking_plan", "lighting_plan", "sound_plan", "shots"],
+      "properties": {
+        "scene_id": {"type": "string", "pattern": "^SC[0-9]{3}$"},
+        "slugline": {"$ref": "#/$defs/string"},
+        "location": {"$ref": "#/$defs/string"},
+        "time": {"$ref": "#/$defs/string"},
+        "dramatic_purpose": {"$ref": "#/$defs/string"},
+        "scene_objective": {"$ref": "#/$defs/string"},
+        "turning_point": {"$ref": "#/$defs/string"},
+        "start_emotion": {"$ref": "#/$defs/string"},
+        "end_emotion": {"$ref": "#/$defs/string"},
+        "blocking_plan": {"$ref": "#/$defs/stringArray"},
+        "lighting_plan": {"$ref": "#/$defs/string"},
+        "sound_plan": {"$ref": "#/$defs/string"},
+        "shots": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/shot"}}
+      },
+      "patternProperties": {"^x_": {}},
+      "additionalProperties": false
+    },
+    "shot": {
+      "type": "object",
+      "required": ["shot_id", "duration_sec", "narrative_function", "dramatic_subject", "shot_size", "camera_angle", "camera_height", "lens_intent", "camera_position", "camera_movement", "subject_action", "blocking", "composition", "performance_beats", "foreground", "background", "focus_strategy", "lighting_intent", "sound_focus", "transition_in", "transition_out", "continuity_anchors", "image_prompt", "video_prompt", "negative_prompt"],
+      "properties": {
+        "shot_id": {"type": "string", "pattern": "^SC[0-9]{3}_SH[0-9]{3}$"},
+        "duration_sec": {"type": "number", "exclusiveMinimum": 0},
+        "narrative_function": {"$ref": "#/$defs/string"},
+        "dramatic_subject": {"$ref": "#/$defs/string"},
+        "shot_size": {"$ref": "#/$defs/string"},
+        "camera_angle": {"$ref": "#/$defs/string"},
+        "camera_height": {"$ref": "#/$defs/string"},
+        "lens_intent": {"$ref": "#/$defs/string"},
+        "camera_position": {"$ref": "#/$defs/string"},
+        "camera_movement": {"$ref": "#/$defs/string"},
+        "subject_action": {"$ref": "#/$defs/stringArray"},
+        "blocking": {"$ref": "#/$defs/stringArray"},
+        "composition": {"$ref": "#/$defs/string"},
+        "performance_beats": {"$ref": "#/$defs/stringArray"},
+        "foreground": {"$ref": "#/$defs/string"},
+        "background": {"$ref": "#/$defs/string"},
+        "focus_strategy": {"$ref": "#/$defs/string"},
+        "lighting_intent": {"$ref": "#/$defs/string"},
+        "sound_focus": {"$ref": "#/$defs/string"},
+        "transition_in": {"$ref": "#/$defs/string"},
+        "transition_out": {"$ref": "#/$defs/string"},
+        "continuity_anchors": {"$ref": "#/$defs/stringArray"},
+        "directorial_quality": {"$ref": "#/$defs/directorialQuality"},
+        "generation_feasibility": {"$ref": "#/$defs/generationFeasibility"},
+        "revision_decision": {"$ref": "#/$defs/revisionDecision"},
+        "timeline_beats": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/timelineBeat"}},
+        "end_state": {"$ref": "#/$defs/string"},
+        "segment_plan": {"$ref": "#/$defs/segmentPlan"},
+        "model_adapter": {"$ref": "#/$defs/modelAdapter"},
+        "image_prompt": {"$ref": "#/$defs/string"},
+        "video_prompt": {"$ref": "#/$defs/string"},
+        "negative_prompt": {"$ref": "#/$defs/string"}
+      },
+      "patternProperties": {"^x_": {}},
+      "additionalProperties": false
+    },
+    "directorialQuality": {
+      "type": "object",
+      "required": ["rating", "dramatic_purpose", "narrative_value", "emotional_rhythm", "blocking", "camera_language", "editing_logic", "summary"],
+      "properties": {
+        "rating": {"type": "string", "enum": ["strong", "workable", "weak", "redundant"]},
+        "dramatic_purpose": {"$ref": "#/$defs/string"},
+        "narrative_value": {"$ref": "#/$defs/string"},
+        "emotional_rhythm": {"$ref": "#/$defs/string"},
+        "blocking": {"$ref": "#/$defs/string"},
+        "camera_language": {"$ref": "#/$defs/string"},
+        "editing_logic": {"$ref": "#/$defs/string"},
+        "summary": {"$ref": "#/$defs/string"}
+      },
+      "additionalProperties": false
+    },
+    "generationFeasibility": {
+      "type": "object",
+      "required": ["rating", "character_count", "simultaneous_action_count", "hand_action_complexity", "physical_contact", "occlusion", "turning_complexity", "fast_motion", "camera_subject_concurrent_motion", "large_view_change", "identity_consistency_risk", "start_state_clarity", "end_state_clarity", "single_generation_capacity", "risks", "mitigations", "recommended_route"],
+      "properties": {
+        "rating": {"type": "string", "enum": ["high", "medium", "low", "not-feasible"]},
+        "character_count": {"type": "integer", "minimum": 0},
+        "simultaneous_action_count": {"type": "integer", "minimum": 0},
+        "hand_action_complexity": {"type": "string", "enum": ["none", "low", "medium", "high"]},
+        "physical_contact": {"type": "boolean"},
+        "occlusion": {"type": "string", "enum": ["none", "partial", "major"]},
+        "turning_complexity": {"type": "string", "enum": ["none", "simple", "complex"]},
+        "fast_motion": {"type": "boolean"},
+        "camera_subject_concurrent_motion": {"type": "boolean"},
+        "large_view_change": {"type": "boolean"},
+        "identity_consistency_risk": {"type": "string", "enum": ["low", "medium", "high"]},
+        "start_state_clarity": {"type": "string", "enum": ["clear", "partial", "unclear"]},
+        "end_state_clarity": {"type": "string", "enum": ["clear", "partial", "unclear"]},
+        "single_generation_capacity": {"type": "string", "enum": ["suitable", "borderline", "unsuitable"]},
+        "risks": {"$ref": "#/$defs/stringArray"},
+        "mitigations": {"$ref": "#/$defs/stringArray"},
+        "recommended_route": {"$ref": "#/$defs/string"}
+      },
+      "additionalProperties": false
+    },
+    "revisionDecision": {
+      "type": "object",
+      "required": ["decision", "problem", "impact", "director_reason", "ai_generation_reason", "revision_plan", "revised_shot_structure"],
+      "properties": {
+        "decision": {"type": "string", "enum": ["keep", "delete", "merge", "split", "reorder", "replace"]},
+        "problem": {"$ref": "#/$defs/string"},
+        "impact": {"$ref": "#/$defs/string"},
+        "director_reason": {"$ref": "#/$defs/string"},
+        "ai_generation_reason": {"$ref": "#/$defs/string"},
+        "revision_plan": {"$ref": "#/$defs/string"},
+        "revised_shot_structure": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["shot_id", "source_shot_ids", "narrative_function", "duration_sec", "start_state", "end_state", "transition"],
+            "properties": {
+              "shot_id": {"type": "string", "pattern": "^SC[0-9]{3}_SH[0-9]{3}$"},
+              "source_shot_ids": {"$ref": "#/$defs/stringArray"},
+              "narrative_function": {"$ref": "#/$defs/string"},
+              "duration_sec": {"type": "number", "exclusiveMinimum": 0},
+              "start_state": {"$ref": "#/$defs/string"},
+              "end_state": {"$ref": "#/$defs/string"},
+              "transition": {"$ref": "#/$defs/string"}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "timelineBeat": {
+      "type": "object",
+      "required": ["start_sec", "end_sec", "subject_action", "camera_action", "environment_action", "expression_change", "continuity_anchor"],
+      "properties": {
+        "start_sec": {"type": "number", "minimum": 0},
+        "end_sec": {"type": "number", "exclusiveMinimum": 0},
+        "subject_action": {"$ref": "#/$defs/string"},
+        "camera_action": {"$ref": "#/$defs/string"},
+        "environment_action": {"$ref": "#/$defs/string"},
+        "expression_change": {"$ref": "#/$defs/string"},
+        "continuity_anchor": {"$ref": "#/$defs/string"}
+      },
+      "additionalProperties": false
+    },
+    "segmentPlan": {
+      "type": "object",
+      "required": ["camera_path", "subject_path", "focus_transitions", "composition_changes", "occlusion_points", "hidden_cut_points", "segment_count", "segment_handoffs", "start_anchor", "end_anchor", "segments"],
+      "properties": {
+        "camera_path": {"$ref": "#/$defs/string"},
+        "subject_path": {"$ref": "#/$defs/string"},
+        "focus_transitions": {"$ref": "#/$defs/stringArray"},
+        "composition_changes": {"$ref": "#/$defs/stringArray"},
+        "occlusion_points": {"$ref": "#/$defs/stringArray"},
+        "hidden_cut_points": {"$ref": "#/$defs/stringArray"},
+        "segment_count": {"type": "integer", "minimum": 1},
+        "segment_handoffs": {"$ref": "#/$defs/stringArray"},
+        "start_anchor": {"$ref": "#/$defs/string"},
+        "end_anchor": {"$ref": "#/$defs/string"},
+        "segments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/generationSegment"}}
+      },
+      "additionalProperties": false
+    },
+    "generationSegment": {
+      "type": "object",
+      "required": ["segment_id", "start_sec", "end_sec", "start_frame", "subject_position_facing", "current_action_state", "camera_position", "camera_movement", "environment_lighting", "end_frame", "next_handoff_anchor"],
+      "properties": {
+        "segment_id": {"type": "string", "pattern": "^SC[0-9]{3}_SH[0-9]{3}_SG[0-9]{2}$"},
+        "start_sec": {"type": "number", "minimum": 0},
+        "end_sec": {"type": "number", "exclusiveMinimum": 0},
+        "start_frame": {"$ref": "#/$defs/string"},
+        "subject_position_facing": {"$ref": "#/$defs/string"},
+        "current_action_state": {"$ref": "#/$defs/string"},
+        "camera_position": {"$ref": "#/$defs/string"},
+        "camera_movement": {"$ref": "#/$defs/string"},
+        "environment_lighting": {"$ref": "#/$defs/string"},
+        "end_frame": {"$ref": "#/$defs/string"},
+        "next_handoff_anchor": {"$ref": "#/$defs/string"}
+      },
+      "additionalProperties": false
+    },
+    "modelAdapter": {
+      "type": "object",
+      "required": ["master_shot_id", "preserved_anchors", "variants"],
+      "properties": {
+        "master_shot_id": {"type": "string", "pattern": "^SC[0-9]{3}_SH[0-9]{3}$"},
+        "preserved_anchors": {"$ref": "#/$defs/stringArray"},
+        "variants": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/adapterVariant"}}
+      },
+      "additionalProperties": false
+    },
+    "adapterVariant": {
+      "type": "object",
+      "required": ["adapter_id", "target_profile", "prompt_length_strategy", "action_density_strategy", "recommended_duration_sec", "camera_complexity_strategy", "start_end_frame_strategy", "negative_prompt_strategy", "recommend_image_to_video", "recommend_segmented_generation", "adapted_prompt"],
+      "properties": {
+        "adapter_id": {"type": "string", "minLength": 1},
+        "target_profile": {"type": "string", "minLength": 1},
+        "prompt_length_strategy": {"$ref": "#/$defs/string"},
+        "action_density_strategy": {"$ref": "#/$defs/string"},
+        "recommended_duration_sec": {"type": "number", "exclusiveMinimum": 0},
+        "camera_complexity_strategy": {"$ref": "#/$defs/string"},
+        "start_end_frame_strategy": {"$ref": "#/$defs/string"},
+        "negative_prompt_strategy": {"$ref": "#/$defs/string"},
+        "recommend_image_to_video": {"type": "boolean"},
+        "recommend_segmented_generation": {"type": "boolean"},
+        "adapted_prompt": {"$ref": "#/$defs/string"}
+      },
+      "additionalProperties": false
+    },
+    "continuity": {
+      "type": "object",
+      "required": ["screen_direction", "character_state", "props", "costume", "lighting", "environment"],
+      "properties": {
+        "screen_direction": {"$ref": "#/$defs/stringArray"},
+        "character_state": {"$ref": "#/$defs/stringArray"},
+        "props": {"$ref": "#/$defs/stringArray"},
+        "costume": {"$ref": "#/$defs/stringArray"},
+        "lighting": {"$ref": "#/$defs/stringArray"},
+        "environment": {"$ref": "#/$defs/stringArray"}
+      },
+      "additionalProperties": false
+    },
+    "issue": {
+      "type": "object",
+      "required": ["issue_id", "severity", "category", "location", "evidence", "impact", "fix"],
+      "properties": {
+        "issue_id": {"type": "string", "pattern": "^ISS[0-9]{3}$"},
+        "severity": {"type": "string", "enum": ["critical", "major", "minor", "suggestion"]},
+        "category": {"$ref": "#/$defs/string"},
+        "location": {"$ref": "#/$defs/string"},
+        "evidence": {"$ref": "#/$defs/string"},
+        "impact": {"$ref": "#/$defs/string"},
+        "fix": {"$ref": "#/$defs/string"}
+      },
+      "additionalProperties": false
+    },
+    "review": {
+      "type": "object",
+      "required": ["critical_issues", "major_issues", "minor_issues", "recommendations"],
+      "properties": {
+        "critical_issues": {"type": "array", "items": {"$ref": "#/$defs/issue"}},
+        "major_issues": {"type": "array", "items": {"$ref": "#/$defs/issue"}},
+        "minor_issues": {"type": "array", "items": {"$ref": "#/$defs/issue"}},
+        "recommendations": {"type": "array", "items": {"$ref": "#/$defs/issue"}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

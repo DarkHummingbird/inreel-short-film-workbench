@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0.0",
+  "review_scope": "动作案例 SC001 的两镜头衔接",
+  "summary": "动作方向和数据盒持手连续；第二镜门内机位需要锁定为同一轴侧，避免穿门后产生无动机的方向反转。",
+  "issues": [
+    {
+      "issue_id": "ISS001",
+      "severity": "major",
+      "category": "screen-direction",
+      "location": "SC001_SH001 → SC001_SH002",
+      "evidence": "前镜维修员明确左向右奔跑；若第二镜从舱门内侧正对轴线另一侧拍摄，滑入方向可能变为右向左。",
+      "impact": "观众会误读维修员折返，削弱舱门闭合的空间压力。",
+      "fix": "将第二镜机位固定在舱门内右侧并保持维修员从画面左侧滑入右侧，或增加可见的中性过轴运动。",
+      "status": "confirmed"
+    },
+    {
+      "issue_id": "ISS002",
+      "severity": "suggestion",
+      "category": "sound",
+      "location": "SC001_SH002",
+      "evidence": "第三次灯灭与舱门锁定是同一节拍。",
+      "impact": "统一声音锚点可强化动作完成并利于下一场衔接。",
+      "fix": "让第三次警示音在门锁声前半拍开始，锁定后立即切断无人机转子声。",
+      "status": "confirmed"
+    }
+  ],
+  "checked_categories": [
+    "character",
+    "costume",
+    "prop",
+    "screen-direction",
+    "eyeline",
+    "action",
+    "space",
+    "time",
+    "lighting",
+    "weather",
+    "emotion",
+    "motivation",
+    "axis",
+    "focus",
+    "edit",
+    "prompt",
+    "sound"
+  ]
+}

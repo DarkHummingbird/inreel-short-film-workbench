@@ -1,0 +1,42 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "script",
+        "ref": "script@v2"
+      }
+    ],
+    "task_request": null,
+    "mode": "character",
+    "characters": [
+      {
+        "character_id": "xiaolin",
+        "name": "小林",
+        "description": "成年男性，浅灰外套，拖黑色行李箱",
+        "goal": "离开车站，不轻易回头"
+      }
+    ],
+    "character_references": [],
+    "shot": null,
+    "visual_style": "真人、低饱和、夜间车站冷光",
+    "aspect_ratio": "9:16"
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "mode": "character",
+      "image_prompt": "真人正面半身参考图，成年男性小林，浅灰外套，短发，夜间车站冷色柔光。背景简洁，五官清晰。",
+      "avoid": [
+        "改变服装颜色",
+        "加入其他人物"
+      ],
+      "reference_map": [],
+      "composition": "固定机位，正面半身",
+      "continuity_checks": [
+        "浅灰外套是小林的视觉辨识点"
+      ]
+    },
+    "issues": []
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "input": {
+    "project_id": "last_train",
+    "sources": [
+      {
+        "kind": "brief",
+        "ref": "brief@v1"
+      },
+      {
+        "kind": "concept",
+        "ref": "concept@v1"
+      }
+    ],
+    "task_request": null,
+    "brief": {
+      "goal": "series_promotion",
+      "theme": "BL",
+      "premise": "阿哲追到车站出口，试图挽留即将离开的小林。",
+      "audience": "泰国短剧观众；同时验证中文、英文和泰文版本",
+      "hook": "前三秒看出有人要走、有人舍不得",
+      "ending_constraint": "停在小林听见挽留，保留是否回头的悬念",
+      "must_keep": [
+        "两位成年主角是分手三个月的前任",
+        "小林拖着行李离开",
+        "两人没有当场和好"
+      ],
+      "target_duration_ms": 36000,
+      "aspect_ratio": "9:16",
+      "target_languages": [
+        "zh-CN",
+        "en",
+        "th"
+      ]
+    },
+    "selected_concept": {
+      "concept_key": "C01",
+      "title": "车站挽留",
+      "hook": "行李箱加速滚向出口，小林始终没有回头",
+      "character_goals": [
+        {
+          "character_id": "azhe",
+          "goal": "让小林再等一次"
+        },
+        {
+          "character_id": "xiaolin",
+          "goal": "离开车站，不轻易回头"
+        }
+      ],
+      "conflict": "小林赶着离开，阿哲只剩几秒说话",
+      "turn": "阿哲承认来晚并请求再等一次",
+      "ending": "停在小林听见挽留，保留是否回头的悬念",
+      "visual_motif": "出口灯牌与停下的轮子",
+      "production_complexity": "low",
+      "preserved_facts": [
+        "两位成年主角是分手三个月的前任",
+        "小林拖着行李离开",
+        "两人没有当场和好"
+      ],
+      "new_elements": [
+        "车站出口挽留场景为宣推新增"
+      ]
+    },
+    "characters": [
+      {
+        "character_id": "azhe",
+        "name": "阿哲",
+        "description": "成年男性，深蓝外套，空手",
+        "goal": "让小林再等一次"
+      },
+      {
+        "character_id": "xiaolin",
+        "name": "小林",
+        "description": "成年男性，浅灰外套，拖黑色行李箱",
+        "goal": "离开车站，不轻易回头"
+      }
+    ],
+    "source_script": null,
+    "review_feedback": "停在小林听见挽留，别拍回头。"
+  },
+  "output": {
+    "status": "ok",
+    "result": {
+      "title": "末班车之后",
+      "logline": "一个人走向出口，另一个人只来得及请他再等一次。",
+      "hook": "行李箱加速滚向出口，小林始终没有回头",
+      "conflict": "小林赶着离开，阿哲只剩几秒说话",
+      "turn": "阿哲承认来晚并请求再等一次",
+      "ending": "停在小林听见挽留，保留是否回头的悬念",
+      "characters": [
+        {
+          "character_id": "azhe",
+          "name": "阿哲",
+          "description": "成年男性，深蓝外套，空手",
+          "goal": "让小林再等一次"
+        },
+        {
+          "character_id": "xiaolin",
+          "name": "小林",
+          "description": "成年男性，浅灰外套，拖黑色行李箱",
+          "goal": "离开车站，不轻易回头"
+        }
+      ],
+      "beats": [
+        {
+          "beat_id": "B01",
+          "scene": "夜间车站出口",
+          "action": "小林拖着黑色行李箱加快脚步，箱轮快速滚向车站出口。",
+          "emotion": "赶路",
+          "dialogue": []
+        },
+        {
+          "beat_id": "B02",
+          "scene": "夜间车站出口",
+          "action": "小林脚步一顿，背对阿哲说完第一句。",
+          "emotion": "不耐",
+          "dialogue": [
+            {
+              "line_id": "L01",
+              "speaker_id": "xiaolin",
+              "text": "你每次都来晚了。"
+            }
+          ]
+        },
+        {
+          "beat_id": "B03",
+          "scene": "夜间车站出口",
+          "action": "阿哲追到两步之外停住，说完请求。",
+          "emotion": "挽留",
+          "dialogue": [
+            {
+              "line_id": "L02",
+              "speaker_id": "azhe",
+              "text": "那你再等我一次。"
+            }
+          ]
+        },
+        {
+          "beat_id": "B04",
+          "scene": "夜间车站出口",
+          "action": "小林握紧行李杆，阿哲在画外低声挽留。",
+          "emotion": "迟疑",
+          "dialogue": [
+            {
+              "line_id": "L03",
+              "speaker_id": "azhe",
+              "text": "先别走。"
+            }
+          ]
+        },
+        {
+          "beat_id": "B05",
+          "scene": "夜间车站出口",
+          "action": "小林停下，侧脸留在画面边缘，切片名。",
+          "emotion": "悬念",
+          "dialogue": []
+        }
+      ],
+      "preserved_facts": [
+        "两位成年主角是分手三个月的前任",
+        "小林拖着行李离开",
+        "两人没有当场和好"
+      ],
+      "new_elements": [
+        "车站出口挽留场景为宣推新增"
+      ]
+    },
+    "issues": []
+  }
+}
