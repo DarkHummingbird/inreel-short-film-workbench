@@ -1350,17 +1350,19 @@ function modelConfigPage() {
     '<p class="muted">开发阶段继续使用现有百炼适配器。每个项目使用独立的服务端配置文件和 API Key，保存到 `' + x('provider-config/<项目>.json') + '`（权限 600）。Key 不会进入项目数据库、任务记录、成片或浏览器返回值；未配置的项目回退到服务端环境变量。</p>' +
     '<div class="model-status-grid"><div><span>运行模式</span><b>'+x(info.mode ?? '未知')+'</b></div><div><span>地域</span><b>'+x(info.region ?? '未配置')+'</b></div><div><span>业务空间</span><b>'+x(info.workspace || '未配置')+'</b></div><div><span>API Key</span><b>'+x(current)+'</b></div><div><span>配置来源</span><b>'+x(info.source ?? '未读取')+'</b></div></div>' +
     ['text','image','video','speech'].map(key => '<div class="model-row"><span>'+x({text:'文字',image:'图片',video:'视频',speech:'语音'}[key])+'</span><code>'+x(models[key] ?? '未配置')+'</code></div>').join('') +
+    '<div class="model-row"><span>深度思考</span><code>' + x(info.text_thinking === false ? '关闭' : '开启') + '</code></div>' +
     '<div class="model-voice-row"><span>音色</span><b>中文 '+x(voiceState(info.voices?.['zh-CN']))+' · 英文 '+x(voiceState(info.voices?.en))+' · 泰语 '+x(voiceState(info.voices?.th))+'</b></div>' +
     '<div class="model-cost-row"><span>费用单价</span><b>' + [['text_input_per_1k','输入 Token/千'],['text_output_per_1k','输出 Token/千'],['image_each','图片/次'],['video_second','视频/秒'],['speech_character','配音/字']].map(([key,name]) => name + '：' + (Number.isFinite(info.pricing?.[key]) ? '¥' + info.pricing[key] : '未配置')).join(' · ') + '</b></div>' +
     (canEdit ? form('model-config', '<div class="grid">' +
       label('服务地域',select('region',[option('cn-beijing','北京',info.region === 'cn-beijing'),option('ap-southeast-1','新加坡',info.region === 'ap-southeast-1')])) +
       label('业务空间 ID',input('workspace',info.workspace ?? '')) +
-      label('文字模型',input('text',models.text ?? 'qwen-plus')) +
+      label('文字模型',input('text',models.text ?? 'qwen3.8-flash')) +
       label('图片模型',input('image',models.image ?? 'qwen-image-3.0-pro')) +
       '</div><div class="grid">' + label('视频模型',input('video',models.video ?? 'wan3.0-video')) +
       label('语音模型',input('speech',models.speech ?? 'qwen-audio-3.1-tts-flash')) +
       label('中文音色 ID',input('voice_zh','')) + label('英文音色 ID',input('voice_en','')) +
       '</div>' + label('泰语音色 ID',input('voice_th','')) +
+      '<label class="label-inline"><input type="checkbox" name="text_thinking" value="1"'+(info.text_thinking === false ? '' : ' checked')+'> 文字 Agent 启用深度思考（更慢，但复杂剧本和分镜更稳定）</label>' +
       '<details class="pricing-fields"><summary>费用单价（人民币，留空不修改）</summary><div class="grid">' +
       label('输入 Token / 千',input('text_input_per_1k',info.pricing?.text_input_per_1k ?? '','number')) +
       label('输出 Token / 千',input('text_output_per_1k',info.pricing?.text_output_per_1k ?? '','number')) +
@@ -1376,6 +1378,7 @@ function modelConfigPage() {
           voice_zh:f.get('voice_zh'),voice_en:f.get('voice_en'),voice_th:f.get('voice_th'),api_key:f.get('api_key'),
           text_input_per_1k:f.get('text_input_per_1k'),text_output_per_1k:f.get('text_output_per_1k'),
           image_each:f.get('image_each'),video_second:f.get('video_second'),speech_character:f.get('speech_character'),
+          text_thinking:f.has('text_thinking') ? '1' : '',
         })
         modelConfig=result
         clearFormDraft(el.closest('form'))

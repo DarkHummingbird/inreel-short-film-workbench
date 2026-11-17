@@ -31,6 +31,7 @@ export function providerConfigStatus(projectId?: string) {
     region: config.region,
     workspace: config.workspace,
     models: { text:config.text, image:config.image, video:config.video, speech:config.speech },
+    text_thinking: config.textThinking,
     voices: { 'zh-CN':Boolean(config.voices['zh-CN']), en:Boolean(config.voices.en), th:Boolean(config.voices.th) },
     pricing: Object.fromEntries(priceFields.map(field => [field, Number.isFinite(saved.pricing?.[field]) ? Number(saved.pricing[field]) : null])),
     api_key_configured: Boolean(config.apiKey),
@@ -44,7 +45,7 @@ export function saveProviderConfig(input: any, projectId?: string) {
   const region = clean(input.region)
   const workspace = clean(input.workspace)
   const models = {
-    text: clean(input.text) || clean(current.text) || 'qwen-plus',
+    text: clean(input.text) || clean(current.text) || 'qwen3.8-flash',
     image: clean(input.image) || clean(current.image) || 'qwen-image-3.0-pro',
     video: clean(input.video) || clean(current.video) || 'wan2.7-i2v',
     speech: clean(input.speech) || clean(current.speech) || 'qwen-audio-3.1-tts-flash',
@@ -53,6 +54,7 @@ export function saveProviderConfig(input: any, projectId?: string) {
   check(Object.values(models).every(name => modelId.test(name)), '模型标识格式有误', 'model')
   const key = clean(input.api_key)
   check(!key || key.length <= 500, 'API Key 格式异常', 'api_key')
+  const textThinking = input.text_thinking == null ? current.textThinking !== false : input.text_thinking === true || ['1','true','on'].includes(String(input.text_thinking).toLowerCase())
   const pricing = Object.fromEntries(priceFields.map(field => {
     const value = input[field]
     if (value == null || value === '') return [field, Number.isFinite(current.pricing?.[field]) ? Number(current.pricing[field]) : null]
@@ -63,6 +65,7 @@ export function saveProviderConfig(input: any, projectId?: string) {
   const next = {
     ...current,
     region, workspace, ...models,
+    textThinking,
     ...(String(input.voice_zh || '').trim() ? { voice_zh:String(input.voice_zh).trim() } : {}),
     ...(String(input.voice_en || '').trim() ? { voice_en:String(input.voice_en).trim() } : {}),
     ...(String(input.voice_th || '').trim() ? { voice_th:String(input.voice_th).trim() } : {}),
@@ -83,17 +86,19 @@ export function dashscopeConfig(projectId?: string) {
   const value = (key: string) => clean(saved[key]) || clean(fallback[key])
   const region = value('region') || process.env.DASHSCOPE_REGION || 'cn-beijing'
   const workspace = value('workspace') || clean(process.env.DASHSCOPE_WORKSPACE_ID)
-  const text = value('text') || process.env.DASHSCOPE_TEXT_MODEL || 'qwen-plus'
+  const text = value('text') || process.env.DASHSCOPE_TEXT_MODEL || 'qwen3.8-flash'
   const image = value('image') || process.env.DASHSCOPE_IMAGE_MODEL || 'qwen-image-3.0-pro'
   const video = value('video') || process.env.DASHSCOPE_VIDEO_MODEL || 'wan2.7-i2v'
   const speech = value('speech') || process.env.DASHSCOPE_SPEECH_MODEL || 'qwen-audio-3.1-tts-flash'
+  const savedThinking = saved.textThinking ?? fallback.textThinking
+  const textThinking = savedThinking == null ? process.env.DASHSCOPE_TEXT_THINKING !== '0' : savedThinking !== false
   const voices = {
     'zh-CN': value('voice_zh') || process.env.DASHSCOPE_VOICE_ZH || '',
     en: value('voice_en') || process.env.DASHSCOPE_VOICE_EN || '',
     th: value('voice_th') || process.env.DASHSCOPE_VOICE_TH || '',
   }
   const apiKey = value('api_key') || clean(process.env.DASHSCOPE_API_KEY)
-  return { region, workspace, text, image, video, speech, voices, apiKey, ...(process.env.DASHSCOPE_TEXT_STREAM === '1' ? { textStream: true } : {}) }
+  return { region, workspace, text, image, video, speech, voices, apiKey, textThinking, ...(process.env.DASHSCOPE_TEXT_STREAM === '1' ? { textStream: true } : {}) }
 }
 export function validateConfig(config = dashscopeConfig()) {
   check(config.apiKey?.trim(), '请在模型配置页或服务端配置百炼 API Key', 'DASHSCOPE_API_KEY', 422, 'provider_config')
@@ -198,7 +203,7 @@ export function dashscope(config: ReturnType<typeof dashscopeConfig>, log: Log, 
   async function json(system: string, input: any, stage = 'text') {
     const result = await request('/compatible-mode/v1/chat/completions', {
       model: config.text, messages: [{ role: 'system', content: system }, { role: 'user', content: JSON.stringify(input) }],
-      response_format: { type: 'json_object' }, enable_thinking: false,
+      response_format: { type: 'json_object' }, enable_thinking: config.textThinking,
       ...(config.textStream ? { stream: true, stream_options: { include_usage: true } } : {}),
     })
     let content

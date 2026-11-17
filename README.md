@@ -95,7 +95,8 @@ bash scripts/configure-bailian.sh
 | `DASHSCOPE_API_KEY` | 百炼 API Key |
 | `DASHSCOPE_WORKSPACE_ID` | 同地域的业务空间 ID |
 | `DASHSCOPE_REGION` | `cn-beijing`（默认）或 `ap-southeast-1` |
-| `DASHSCOPE_TEXT_MODEL` | 默认 `qwen-plus`，用于结构化 Agent 和翻译 |
+| `DASHSCOPE_TEXT_MODEL` | 默认 `qwen3.8-flash`，用于结构化 Agent、创意、剧本、分镜和翻译 |
+| `DASHSCOPE_TEXT_THINKING` | 默认开启；设为 `0` 关闭文字 Agent 深度思考 |
 | `DASHSCOPE_TEXT_STREAM` | 设为 `1` 时接收流式文字响应，在首段记录原请求号 |
 | `DASHSCOPE_IMAGE_MODEL` | 默认 `qwen-image-3.0-pro`，用于角色参考和关键帧 |
 | `DASHSCOPE_VIDEO_MODEL` | 默认 `wan2.7-i2v`，使用已确认首帧和目标时长 |

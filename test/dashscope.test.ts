@@ -7,7 +7,7 @@ import { persist, probe, mediaPath } from '../src/media.ts'
 test('每个项目保存独立 API Key 配置文件且权限为 600', () => {
   const first = 'p-config-test-a-' + process.pid
   const second = 'p-config-test-b-' + process.pid
-  const base = { region:'cn-beijing', text:'qwen-plus', image:'qwen-image-3.0-pro', video:'wan3.0-video', speech:'qwen-audio-3.1-tts-flash' }
+  const base = { region:'cn-beijing', text:'qwen3.8-flash', image:'qwen-image-3.0-pro', video:'wan3.0-video', speech:'qwen-audio-3.1-tts-flash', textThinking:true }
   try {
     saveProviderConfig({ ...base, workspace:'team-a-space', api_key:'team-a-secret', text_input_per_1k:0.002, text_output_per_1k:0.006,
       image_each:0.2, video_second:0.1, speech_character:0.001 }, first)
@@ -19,6 +19,7 @@ test('每个项目保存独立 API Key 配置文件且权限为 600', () => {
     assert.equal(statSync(providerConfigPath(first)).mode & 0o777, 0o600)
     assert.equal(JSON.parse(readFileSync(providerConfigPath(first), 'utf8')).api_key, 'team-a-secret')
     assert.equal(providerConfigStatus(first).pricing.video_second, 0.1)
+  assert.equal(providerConfigStatus(first).text_thinking, true)
     assert.equal(JSON.parse(readFileSync(providerConfigPath(second), 'utf8')).api_key, 'team-b-secret')
   } finally {
     for (const id of [first, second]) { try { unlinkSync(providerConfigPath(id)) } catch {} }
@@ -46,6 +47,7 @@ test('百炼请求协议、首帧能力、用量与原任务查询', async () =>
   const textBody = JSON.parse(sent[0].body)
   assert.equal(textBody.messages[0].role, 'system')
   assert.equal(textBody.messages[1].content, '{"id":"example"}')
+  assert.equal(textBody.enable_thinking, true)
   assert.deepEqual(logs[0].result.usage, [{ unit:'input_tokens',quantity:8 },{ unit:'output_tokens',quantity:5 }])
   const stored = await persist(Buffer.from('isolated-transport-fixture'), 'png', { kind: 'image', width:720, height:1280 })
   const plan = { first_frame_ref:'frame@v1', video_prompt:'hold', avoid:[], duration_ms:7000 }
