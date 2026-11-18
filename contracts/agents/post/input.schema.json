@@ -329,18 +329,6 @@
           "lines": {
             "items": {
               "properties": {
-                "audio_ref": {
-                  "type": "string",
-                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,95}@v[1-9][0-9]*$"
-                },
-                "audio_start_ms": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "audio_duration_ms": {
-                  "type": "integer",
-                  "minimum": 1
-                },
                 "subtitle_start_ms": {
                   "type": "integer",
                   "minimum": 0
@@ -348,6 +336,17 @@
                 "subtitle_end_ms": {
                   "type": "integer",
                   "minimum": 0
+                }
+              },
+              "if": {
+                "properties": {
+                  "audio_ref": { "type": "string" }
+                }
+              },
+              "then": {
+                "properties": {
+                  "audio_start_ms": { "type": "integer", "minimum": 0 },
+                  "audio_duration_ms": { "type": "integer", "minimum": 1 }
                 }
               }
             }

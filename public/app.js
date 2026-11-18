@@ -453,7 +453,20 @@ function promptPlanEditor(task, args) {
           ...(prepared.plan.video_mode ? {video_mode:prepared.plan.video_mode} : {}),
           ...(prepared.plan.video_references ? {reference_images:prepared.plan.video_references} : {}),
         }
-        return job(task,{...preparedArgs,prepared_plan:{status:'ok',issues:[],result:next}})
+        const plan = {status:'ok',issues:[],result:next}
+        if (task === 'repaint') {
+          const previous = latestJob(task, entry => !entry.plan.prompt_only && entry.plan.shot_id === prepared.plan.shot_id &&
+            entry.plan.production?.edit_base === prepared.plan.production?.edit_base &&
+            entry.plan.input?.task_request === preparedArgs.task_request &&
+            JSON.stringify(entry.saved_agent_plan?.response) === JSON.stringify(plan))
+          if (previous?.state === 'awaiting_query') {
+            if (previous.query_available) return queryUsageJob({ ...previous, project_id:project.id })
+            flash('未收到原任务号。请先在服务商侧核对，当前任务已保留。', true)
+            return false
+          }
+          if (previous?.state === 'failed') preparedArgs.retry_of = previous.id
+        }
+        return job(task,{...preparedArgs,prepared_plan:plan})
       },'primary small'))) + '</details>'
 }
 function agentAdvice(targetRefs = []) {
@@ -994,13 +1007,14 @@ function languagePage() {
   const item = cur('language', language)
   const usable = item?.upstream === cut?.ref && item?.status !== 'needs_recheck'
   const director = is('director')
-  const nativeAudio = !item || item.data.lines.every(line => !line.audio_ref)
   if (!project.languages.length) return card('<h2>目标语种</h2><p class="muted">等待运营在需求页选择目标语种。</p>')
   const options = Object.values(project.assets).filter(a => a.kind === 'audio' && a.language === language)
   const board = project.artifacts[active(3)?.artifact_ref]
   const localizedVideos = Object.values(project.assets).filter(a => a.kind === 'video' && a.localized && a.language === language)
   const adoptable = new Set(project.adoptable_videos)
   const localizedReady = language === 'zh-CN' || Boolean(board?.data.shots.length) && board.data.shots.every(shot => adoptable.has(project.localized_selected?.[language]?.[shot.shot_id]))
+  const currentMusic = item?.data.preview_manifest?.music?.asset_ref
+  const musicAssets = Object.values(project.assets).filter(asset => asset.purpose === 'music' || asset.ref.startsWith('bgm@'))
   const localizedPanel = director && language !== 'zh-CN' && cut && item && item.data.reviewed !== false ? (() => {
     const selectedCount = board?.data.shots.filter(shot => adoptable.has(project.localized_selected?.[language]?.[shot.shot_id])).length ?? 0
     return card('<div class="spread"><div><span class="eyebrow">LANGUAGE-SPECIFIC VIDEO</span><h2>' + x(langs[language] + '专属对白视频') + '</h2></div><span class="tag ' + (selectedCount === board?.data.shots.length ? 'approved' : 'pending_review') + '">' + x(selectedCount + ' / ' + (board?.data.shots.length ?? 0) + ' 已选用') + '</span></div>' +
@@ -1032,17 +1046,20 @@ function languagePage() {
   const lineEditor = usable && item ? item.data.lines.map((line,index) => {
     const latest = latestJob('dubbing',j => j.plan.language === language && j.plan.line?.line_id === line.line_id)
     const shot = cutData?.find(entry => entry.shot_id === line.shot_id)
+    const sourceVideo = language === 'zh-CN' ? shot?.video_ref : project.localized_selected?.[language]?.[line.shot_id]
+    const nativeAudio = project.assets[sourceVideo]?.audio && !item.data.lines.some(entry => entry.shot_id === line.shot_id && entry.audio_ref)
     const waveRef = line.audio_ref || project.localized_selected?.[language]?.[line.shot_id] || project.selected[line.shot_id]
     const start = shot?.start_ms ?? 0, duration = shot?.duration_ms ?? 1
     const left = Math.max(0, Math.min(100, (line.subtitle_start_ms - start) / duration * 100))
     const width = Math.max(2, Math.min(100 - left, (line.subtitle_end_ms - line.subtitle_start_ms) / duration * 100))
+    const dubbingControls = label('配音片段', select('audio' + index, [option('','请选择'), ...options.filter(a => a.purpose === 'dubbing' || a.ref.includes('_' + line.line_id + '_')).map(a => option(a.ref,a.ref + ' · ' + a.duration_ms/1000 + ' 秒', a.ref === line.audio_ref))])) +
+      label('配音起点（毫秒）',input('as'+index,line.audio_start_ms,'number')) +
+      row(generation('dubbing',{language,line_id:line.line_id},'生成配音',latest && ['succeeded','failed'].includes(latest.state) ? latest : undefined)) +
+      (language === 'th' ? label('上传备用配音','<input type="file" name="fallback'+index+'" accept="audio/*">') +
+        button('上传泰语片段', el => fileUpload(el,'fallback'+index,'dubbing'),'small') : '')
     const voiceEditor = nativeAudio
-      ? '<p class="muted">对白和心声使用该语种视频的原生音轨；这里只校字幕，不再重复生成 TTS。</p>'
-      : label('配音片段', select('audio' + index, [option('','请选择'), ...options.filter(a => a.purpose === 'dubbing' || a.ref.includes('_' + line.line_id + '_')).map(a => option(a.ref,a.ref + ' · ' + a.duration_ms/1000 + ' 秒', a.ref === line.audio_ref))])) +
-        label('配音起点（毫秒）',input('as'+index,line.audio_start_ms,'number')) +
-        row(generation('dubbing',{language,line_id:line.line_id},'生成配音',latest && ['succeeded','failed'].includes(latest.state) ? latest : undefined)) +
-        (language === 'th' ? label('上传备用配音','<input type="file" name="fallback'+index+'" accept="audio/*">') +
-          button('上传泰语片段', el => fileUpload(el,'fallback'+index,'dubbing'),'small') : '')
+      ? '<details><summary>沿用原生音轨，可在音轨不可用时补录</summary>' + dubbingControls + '</details>'
+      : dubbingControls
     const timeline = '<div class="audio-wave" data-waveform-src="' + x(waveRef ? media(waveRef) : '') + '"><div class="audio-wave-bars"></div><i class="audio-wave-range" style="left:'+left+'%;width:'+width+'%"></i></div>' +
       '<div class="grid timeline-controls">' +
         label('字幕起点', '<input name="ss'+index+'" type="range" min="'+start+'" max="'+(start+duration-10)+'" step="10" value="'+line.subtitle_start_ms+'">') +
@@ -1055,22 +1072,29 @@ function languagePage() {
         voiceEditor : '<p>' + x(line.target_text) + '</p>') +
       (line.audio_ref ? audio(line.audio_ref,line.line_id + ' 已保存配音') : '') + '</div>'
   }).join('') : ''
-  const editor = item && lineEditor ? (director ?
-    form('language-edit','<div class="list">' + lineEditor + '</div>' + row(button('保存校对稿与片段',el => {
+  const editor = item && usable ? (director ?
+    form('language-edit','<div class="list">' + (lineEditor || '<p>本片无对白。保存后可继续制作语言版本。</p>') + '</div>' + row(button('保存校对稿与片段',el => {
       const f = getForm(el)
       const lines = item.data.lines.map((line,i) => {
-        const ref = nativeAudio ? null : f.get('audio'+i)
+        const ref = f.get('audio'+i)
         return { ...line, target_text:f.get('text'+i) ?? line.target_text, subtitle_text:f.get('sub'+i), audio_ref:ref || null, audio_duration_ms:project.assets[ref]?.duration_ms ?? null,
-          audio_start_ms:nativeAudio ? line.audio_start_ms : Number(f.get('as'+i)), subtitle_start_ms:Number(f.get('ss'+i)), subtitle_end_ms:Number(f.get('se'+i)) }
+          audio_start_ms:f.has('as'+i) ? Number(f.get('as'+i)) : line.audio_start_ms, subtitle_start_ms:Number(f.get('ss'+i)), subtitle_end_ms:Number(f.get('se'+i)) }
       })
       return save('language',{lines,reviewed:true},{language})
     },'primary'))) : '<div id="language-edit"><div class="list">' + lineEditor + '</div></div>') : ''
+  const previewControls = director && usable && item?.status === 'draft' ?
+    form('language-preview', label('背景音乐', select('music_ref', [
+      option('', '请选择背景音乐'), ...musicAssets.map(asset => option(asset.ref, asset.filename ?? asset.ref, asset.ref === currentMusic)),
+    ])) +
+    label('上传背景音乐', '<input type="file" name="musicfile" accept="audio/*">') +
+    row(button('上传音乐', el => fileUpload(el, 'musicfile', 'music'), 'small') +
+      (runtime.mode === 'mock' ? generation('music', {}, '生成模拟音乐') : '') +
+      button('生成同步预览', el => job('preview', { language, music_ref:getForm(el).get('music_ref') }), 'small', !localizedReady))) : ''
   return languageTabs() + localizedPanel + card(statusHeading(langs[language] + '语言素材',item) + version(item) +
-    (nativeAudio ? '<div class="job-notice">当前语言以视频原生对白和心声为主。后期只增加字幕和背景音乐；如果换成音轨不可用的视频，再选择逐句补录配音。</div>' : '') +
     (!cut ? '<p class="muted">' + checkpointName(4) + '完成后开放语言制作。</p>' : director ? row(generation('translate',{language},language === 'zh-CN' ? '载入中文对白' : '生成翻译')) : '') +
-    editor + (usable && item?.data.preview_ref ? video(media(item.data.preview_ref),langs[language]+'同步预览') : '') +
-    (director && usable && item?.status === 'draft' ? row((localizedReady ? generation('preview',{language},'生成同步预览') : button('先生成并选用'+langs[language]+'专属视频',()=>false,'small',true)) +
-      (item.data.preview_ref ? approve(5,item) : '')) : '') + history('language',language))
+    editor + previewControls + (usable && item?.data.preview_ref ? video(media(item.data.preview_ref), langs[language] + '同步预览') : '') +
+    (director && usable && item?.status === 'draft' && item.data.preview_manifest ? row(approve(5,item,{ preview_ref:item.data.preview_ref })) : '') +
+    history('language',language))
 }
 function deliveryReviewForm(item) {
   return form('delivery-review-' + item.ref,
@@ -1103,16 +1127,15 @@ function deliveriesPage() {
   const assemblyJob = latestJob('assemble', j => j.plan.language === language && j.plan.context.check5 === check5?.ref)
   const retryJob = returnedJob ?? (assemblyJob?.state === 'failed' ? assemblyJob : null)
   const all = Object.values(project.artifacts).filter(a => a.type === 'delivery' && a.language === language).reverse()
-  const music = Object.values(project.assets).filter(a => a.purpose === 'music' || a.ref.startsWith('bgm@'))
+  const confirmedManifest = check5?.delivery_manifest
   const composer = director && project.languages.length && (!complete || completedEdit) ? card('<h2>制作' + langs[language] + '成片</h2>' +
-    form('composer', label('背景音乐',select('music',[option('','选择背景音乐'),...music.map(a => option(a.ref,a.filename ?? a.ref,a.ref === currentDelivery?.data.music_ref))])) +
-      label('上传背景音乐','<input type="file" name="musicfile" accept="audio/*">') +
-      row(button('上传音乐',el => fileUpload(el,'musicfile','music'),'small') +
-        (runtime.mode === 'mock' ? generation('music',{},'生成模拟音乐') : '') +
-        button(retryJob ? '重新合成成片' : '合成成片',el => job('assemble',{
-          language,music_ref:getForm(el).get('music'), ...(retryJob ? { retry_of: retryJob.id } : {}),
-        }),'primary',!check5)) +
-      (!check5 ? '<p class="muted">完成该语种的' + checkpointName(5) + '后开放合成。</p>' : '<p class="muted">使用确认 ' + x(check5.ref) + '</p>'))) : ''
+    (!confirmedManifest
+      ? '<p class="muted">请先生成同步预览并完成该语种的' + checkpointName(5) + '。</p>'
+      : '<p class="muted">使用确认 ' + x(check5.ref) + ' 的剪辑、字幕和音轨。背景音乐 ' +
+        x(project.assets[confirmedManifest.music?.asset_ref]?.filename ?? confirmedManifest.music?.asset_ref ?? '无') + '。</p>') +
+    row(button(retryJob ? '重新合成成片' : '合成成片', () => job('assemble', {
+      language, ...(retryJob ? { retry_of: retryJob.id } : {}),
+    }), 'primary', !confirmedManifest))) : ''
   const deliver = all.map(item => {
     const href = base() + '/deliveries/' + encoded(item.ref)
     const approved = Object.values(project.confirmations).some(c => c.step === 6 && c.artifact_ref === item.ref && c.file_ref === item.data.file_ref)
@@ -1177,10 +1200,10 @@ async function refreshUsage() {
   usageOverview = await api('/api/usage')
 }
 async function queryUsageJob(job) {
-  await api('/api/projects/' + encoded(job.project_id) + '/jobs/' + encoded(job.id) + '/query', 'POST', {})
+  const result = await api('/api/projects/' + encoded(job.project_id) + '/jobs/' + encoded(job.id) + '/query', 'POST', {})
   await refreshUsage()
   if (project?.id === job.project_id) await refreshProject()
-  flash('已查询原任务，请查看最新状态')
+  flash('原任务 · ' + (states[result.state] ?? result.state) + (result.error?.message ? ' · ' + result.error.message : ''))
 }
 function usageTaskCard(job) {
   return '<article class="usage-task-card">' +
@@ -1189,7 +1212,8 @@ function usageTaskCard(job) {
     '<p class="usage-task-project">' + x(job.project_title) + (job.plan.shot_id ? ' · ' + x(job.plan.shot_id) : '') + (job.plan.language ? ' · ' + x(langs[job.plan.language] ?? job.plan.language) : '') + '</p>' +
     (job.error ? '<p class="usage-task-error">' + x(job.error.message + (job.error.field ? ' · ' + job.error.field : '')) + '</p>' : '') +
     '<div class="usage-task-meta"><span>' + x(usageText(job)) + '</span><span>' + x(job.model) + '</span><span>' + x(usageCostText(job)) + '</span></div>' +
-    (job.state === 'awaiting_query' && is('director') ? button('查询原任务',() => queryUsageJob(job),'small') : '') +
+    (job.state === 'awaiting_query' && is('director') ? (job.query_available ? button('查询原任务',() => queryUsageJob(job),'small') :
+      '<p class="muted">未收到可查询的原任务回执，请在服务商侧核对。</p>') : '') +
     '<details class="usage-task-details"><summary>任务详情</summary><div class="text">' +
       '<p>任务号 ' + x(job.id) + '</p>' + (job.provider_job_id ? '<p>服务商任务 ' + x(job.provider_job_id) + '</p>' : '') +
       (job.skill ? '<p>' + x(job.skill.id + ' @ ' + job.skill.version + ' · ' + (job.skill.mode === 'renderer_only' ? '本地渲染器' : job.skill.mode === 'prompt_injection' ? '提示词注入' : '旧记录（未标注）')) + '</p>' +
@@ -1309,10 +1333,10 @@ function jobsPage() {
   return '<section class="usage-hero"><div><p class="eyebrow">OPERATIONS OVERVIEW</p><h2>任务与用量</h2><p class="muted">' + modeInfo + '</p>' + modelInfo + '</div><div class="usage-hero-actions">' +
     button('刷新看板',async()=>{await refreshLists(); if(project) await refreshProject()},'small') +
     (project && is('operations') ? button('清理遗留任务',async()=>{
-      if (!confirm('删除当前项目中所有失败和待查询任务？成功任务、产物、成片和确认记录不会删除。')) return false
+      if (!confirm('清理当前项目的失败和待查询任务？局部重绘的待查询记录及关联回执会保留。')) return false
       const result=await write('jobs/cleanup',{states:['failed','awaiting_query']})
       await refreshLists()
-      flash('已清理 '+result.count+' 个遗留任务')
+      flash('已清理 '+result.count+' 个遗留任务' + (result.retained?.length ? '，保留 '+result.retained.length+' 条局部重绘回执' : ''))
     },'small ghost') : '') + '</div></section>' +
     '<div class="usage-kpis">' +
       [['全部任务',jobs.length,usageScope==='all'?'全部项目':'当前项目'],['已完成',completed,'有结果'],['处理中',active,'排队或执行'],['待查询',query,'需要核对'],['失败',failed,'需要处理'],['预估费用',estimatedCost ? '¥' + estimatedCost.toFixed(2) : '未配置',estimatedCost ? '按项目单价估算' : '请在模型配置填写单价'],['实际账单',actualCny ? '¥' + actualCny.toFixed(2) : actualUsd ? '$' + actualUsd.toFixed(2) : '未录入',billing.length ? billing.length + ' 条账单记录' : '运营录入供应商账单']].map(([name,value,note]) => '<div class="usage-kpi"><span>'+x(name)+'</span><strong>'+x(value)+'</strong><small>'+x(note)+'</small></div>').join('') +

@@ -127,7 +127,7 @@ export function voiceFor(config: ReturnType<typeof dashscopeConfig>, language: s
 type Unit = { unit: string, quantity: number }
 type Log = (stage: string, record: {
   request_id?: string, task_id?: string, usage?: Unit[], plan?: any, result_url?: string,
-  model?: string, parameters?: Record<string, unknown>, prompt?: string, references?: { ref: unknown, role: string }[],
+  model?: string, requested_model?: string, reasoning_present?: boolean, parameters?: Record<string, unknown>, prompt?: string, references?: { ref: unknown, role: string }[],
   joins?: Record<string, unknown>,
 }) => void
 const units = (usage: any, fields: Record<string, string>): Unit[] =>
@@ -193,7 +193,7 @@ export function dashscope(config: ReturnType<typeof dashscopeConfig>, log: Log, 
     let data
     try { data = await response.json() }
     catch {
-      if (response.status < 500 && !response.ok) throw providerError(response.status, null)
+      if (response.status < 500 && response.status !== 408 && !response.ok) throw providerError(response.status, null)
       throw new UnknownProviderResult('服务商响应无法解析，请核对原请求')
     }
     if (response.status >= 500 || response.status === 408) throw new UnknownProviderResult('服务商暂未确认请求状态，请核对原任务')
@@ -210,8 +210,14 @@ export function dashscope(config: ReturnType<typeof dashscopeConfig>, log: Log, 
     if (result instanceof Response) {
       content = await streamContent(result, stage)
     } else {
-      log(stage, { request_id: limitedId(result.id ?? result.request_id), usage: units(result.usage, tokens) })
-      content = result.choices?.[0]?.message?.content
+      const message = result.choices?.[0]?.message
+      log(stage, {
+        request_id: limitedId(result.id ?? result.request_id),
+        model: limitedId(result.model), requested_model: config.text,
+        reasoning_present: typeof message?.reasoning_content === 'string' && message.reasoning_content.length > 0,
+        usage: units(result.usage, tokens),
+      })
+      content = message?.content
     }
     try { return JSON.parse(content) }
     catch { throw new Problem(422, 'model_invalid_json', '千问没有返回可解析的单个 JSON 对象', 'output') }
@@ -219,6 +225,7 @@ export function dashscope(config: ReturnType<typeof dashscopeConfig>, log: Log, 
   async function streamContent(response: Response, stage: string) {
     const reader = response.body!.pipeThrough(new TextDecoderStream()).getReader()
     let pending = '', content = '', requestId: string | undefined
+    let reasoningPresent = false, model: string | undefined
     try {
       for (;;) {
         const { value, done } = await reader.read()
@@ -230,7 +237,10 @@ export function dashscope(config: ReturnType<typeof dashscopeConfig>, log: Log, 
           pending = pending.slice(end + 1)
           if (!line.startsWith('data:')) continue
           const data = line.slice(5).trim()
-          if (data === '[DONE]') return content
+          if (data === '[DONE]') {
+            log(stage, { model, requested_model: config.text, reasoning_present: reasoningPresent })
+            return content
+          }
           const event = JSON.parse(data)
           if (event.error) throw new UnknownProviderResult('流式响应返回错误，请按原请求编号核对')
           const id = limitedId(event.id ?? event.request_id)
@@ -239,7 +249,10 @@ export function dashscope(config: ReturnType<typeof dashscopeConfig>, log: Log, 
             log(stage, { request_id: requestId })
           }
           if (event.usage) log(stage, { usage: units(event.usage, tokens) })
-          content += event.choices?.[0]?.delta?.content ?? ''
+          model = limitedId(event.model) ?? model
+          const delta = event.choices?.[0]?.delta
+          reasoningPresent ||= typeof delta?.reasoning_content === 'string' && delta.reasoning_content.length > 0
+          content += delta?.content ?? ''
         }
       }
     } catch (error) {
@@ -317,14 +330,20 @@ export function dashscope(config: ReturnType<typeof dashscopeConfig>, log: Log, 
   async function queryMedia(kind: 'image' | 'video', taskId: string, polls = 1) {
     check(limitedId(taskId), '缺少可查询的服务商任务号', 'provider_job_id')
     for (let attempt = 0; attempt < polls; attempt++) {
-      const result = await request('/api/v1/tasks/' + encodeURIComponent(taskId))
+      const result = await request('/api/v1/tasks/' + encodeURIComponent(taskId)).catch(error => {
+        if (error instanceof UnknownProviderResult) throw error
+        throw new UnknownProviderResult('原任务暂时无法查询：' + error.message)
+      })
       const output = result.output
       const usage = kind === 'video' ? units(result.usage, { duration: 'video_seconds', video_count: 'videos' })
         : units(result.usage, result.usage?.output_image_count === undefined ? { image_count: 'images' } : { input_image_count: 'input_images', output_image_count: 'images' })
       log(kind, { request_id: limitedId(result.request_id), task_id: taskId, ...(usage.length ? { usage } : {}) })
       if (output?.task_status === 'SUCCEEDED') {
         const url = kind === 'video' ? output.video_url : output.choices?.[0]?.message?.content?.find((c: any) => c.image)?.image
-        return download(url, kind)
+        return download(url, kind).catch(error => {
+          if (error instanceof UnknownProviderResult) throw error
+          throw new UnknownProviderResult('服务商已完成，暂时无法导入原任务的媒体：' + error.message)
+        })
       }
       if (['FAILED', 'CANCELED'].includes(output?.task_status)) throw providerError(0, output.code ?? output.task_status)
       if (!['PENDING', 'RUNNING', 'SUSPENDED'].includes(output?.task_status)) throw new UnknownProviderResult('服务商暂时无法确认该任务，请按原任务号核对')

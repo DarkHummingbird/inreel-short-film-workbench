@@ -149,10 +149,9 @@ export async function cropVideoRight(asset: any, percent: number) {
       derived_from: asset.ref, crop_right_percent: percent })
   })
 }
-export async function render(cut: any[], lines: any[], music: any, assets: Record<string, any>) {
+export async function render(cut: any[], lines: any[], music: any, assets: Record<string, any>,
+  audioModes?: Record<string, 'native' | 'dub' | 'silence'>) {
   return temp(async dir => {
-    const nativeAudio = lines.every(line => !line.audio_ref)
-    if (nativeAudio) check(cut.every(shot => assets[shot.video_ref]?.audio), '所选视频缺少原生音轨，请生成补录配音或更换视频', 'native_audio')
     const large = cut.some(shot => assets[shot.video_ref].source === 'dashscope')
     const [width, height] = large ? [720, 1280] : [360, 640]
     const dimensions = width + ':' + height
@@ -179,29 +178,29 @@ export async function render(cut: any[], lines: any[], music: any, assets: Recor
       filters.push('[' + (segments.length + index) + ':v]format=rgba,scale=' + dimensions + '[sub' + index + ']')
       filters.push('[p' + index + '][sub' + index + ']overlay=0:0:enable=\'between(t,' + line.subtitle_start_ms / 1000 + ',' + line.subtitle_end_ms / 1000 + ')\'[p' + (index + 1) + ']')
     }
-    const voiceTracks: string[] = []
-    if (nativeAudio) {
-      filters.push(cut.map((shot, i) => '[' + i + ':a]atrim=start=' + (shot.in_ms ?? 0) / 1000 + ':duration=' + shot.duration_ms / 1000 +
-        ',asetpts=PTS-STARTPTS[a' + i + ']').join(';'))
-      filters.push(cut.map((_, i) => '[a' + i + ']').join('') + 'concat=n=' + cut.length + ':v=0:a=1[native]')
-      voiceTracks.push('[native]')
-    } else {
-      for (const [index, line] of dubbed.entries()) {
-        filters.push('[' + (speechStart + index) + ':a]aformat=channel_layouts=mono,adelay=' + line.audio_start_ms + ':all=1[a' + index + ']')
-        voiceTracks.push('[a' + index + ']')
-      }
+    const tracks: string[] = []
+    for (const [index, shot] of cut.entries()) {
+      const mode = audioModes?.[shot.shot_id] ??
+        (assets[shot.video_ref]?.audio && !dubbed.some(line => line.shot_id === shot.shot_id) ? 'native' : 'silence')
+      if (mode !== 'native') continue
+      const label = '[native' + index + ']'
+      filters.push('[' + index + ':a]atrim=start=' + (shot.in_ms ?? 0) / 1000 + ':duration=' + shot.duration_ms / 1000 +
+        ',asetpts=PTS-STARTPTS,adelay=' + shot.start_ms + ':all=1' + label)
+      tracks.push(label)
     }
-    if (music) filters.push('[' + musicIndex + ':a]aformat=channel_layouts=mono,volume=0.35[bed]')
-    if (nativeAudio) {
-      const tracks = ['[native]', ...(music ? ['[bed]'] : [])]
-      filters.push(tracks.length === 1
-        ? '[native]anull,alimiter=limit=0.9[mix]'
-        : tracks.join('') + 'amix=inputs=' + tracks.length + ':duration=first:normalize=0,alimiter=limit=0.9[mix]')
-    } else {
-      filters.push('anullsrc=r=24000:cl=mono:d=' + duration + '[silent]')
-      const tracks = [...voiceTracks, ...(music ? ['[bed]'] : [])]
-      filters.push('[silent]' + tracks.join('') + 'amix=inputs=' + (tracks.length + 1) + ':duration=first:normalize=0,alimiter=limit=0.9[mix]')
+    for (const [index, line] of dubbed.entries()) {
+      const label = '[dub' + index + ']'
+      filters.push('[' + (speechStart + index) + ':a]aformat=channel_layouts=mono,adelay=' + line.audio_start_ms + ':all=1' + label)
+      tracks.push(label)
     }
+    if (music) {
+      filters.push('[' + musicIndex + ':a]aformat=channel_layouts=mono,volume=0.35[bed]')
+      tracks.push('[bed]')
+    }
+    filters.push('anullsrc=r=24000:cl=mono:d=' + duration + '[silent]')
+    filters.push(tracks.length
+      ? '[silent]' + tracks.join('') + 'amix=inputs=' + (tracks.length + 1) + ':duration=first:normalize=0,alimiter=limit=0.9[mix]'
+      : '[silent]anull[mix]')
     await ff([...args, '-filter_complex', filters.join(';'), '-map', '[p' + lines.length + ']', '-map', '[mix]', '-t', String(duration),
       '-c:v', 'libx264', '-threads', '2', '-preset', 'veryfast', '-crf', '22', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-movflags', '+faststart', output])
     const info = await probe(output)

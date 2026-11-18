@@ -6,9 +6,9 @@ import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { check, clean, fixture, hash, id, object, Problem } from './common.ts'
 import { active, createProject, current, episodePosition, openStore, role, usage, type Store } from './store.ts'
-import { addAsset, apply, fitsBoard } from './workflow.ts'
+import { addAsset, apply, fitsBoard, localizedDialogueMatches } from './workflow.ts'
 import { createSequel } from './episodes.ts'
-import { previewJob, queue, worker, type PreparedAgentPlan } from './jobs.ts'
+import { canQueryOriginal, previewJob, queue, worker, type PreparedAgentPlan } from './jobs.ts'
 import { dashscopeConfig, providerConfigStatus, realEnabled, saveProviderConfig, speechModelFor } from './dashscope.ts'
 import { mediaPath, upload } from './media.ts'
 
@@ -80,13 +80,24 @@ function publicJob(job: any) {
     return [name, receipt]
   }))
   const { apiKey, ...safeConfig } = data.config ?? {}
-  return { ...data, config: data.config ? safeConfig : data.config, provider_receipts: receipts }
+  return { ...data, config: data.config ? safeConfig : data.config, provider_receipts: receipts,
+    query_available: job.state === 'awaiting_query' && canQueryOriginal(job) }
 }
 function publicProject(project: any, account: string) {
   const { requests, notifications, ...data } = project
   const confirmedBoard = active(project, 3)?.artifact_ref
+  const cutCheck = active(project, 4)
+  const cut = project.artifacts[cutCheck?.artifact_ref]?.data.cut ?? []
   const adoptableVideos = confirmedBoard ? Object.values(project.assets)
-    .filter((asset: any) => fitsBoard(project, asset, confirmedBoard, asset.shot_id))
+    .filter((asset: any) => {
+      if (!fitsBoard(project, asset, confirmedBoard, asset.shot_id)) return false
+      if (!asset.localized) return true
+      const language = current(project, 'language', asset.language)
+      const shot = cut.find((entry: any) => entry.shot_id === asset.shot_id)
+      return shot && language?.upstream === cutCheck?.ref &&
+        (shot.in_ms ?? 0) + shot.duration_ms <= asset.duration_ms &&
+        localizedDialogueMatches(project, asset, language.data.lines, asset.shot_id)
+    })
     .map((asset: any) => asset.ref) : []
   const member_profiles = project.member_profiles ?? Object.fromEntries(Object.values(project.members).map((id: any) => [id, storelessProfile(String(id))]))
   return { ...data, member_profiles, adoptable_videos: adoptableVideos, jobs: Object.fromEntries(Object.entries(project.jobs).map(([id, j]) => [id, publicJob(j)])), notifications: notifications.filter((item: any) => item.to === account), role: role(project, account) }
@@ -339,7 +350,10 @@ export function createApp(store: Store = openStore(), passwords = demoPasswords,
       }
       if (item === 'jobs' && detail && sub === 'query' && method === 'POST') {
         role(project, account, 'director')
-        check(project.jobs[detail], '任务不存在', 'job', 404)
+        const job = project.jobs[detail]
+        check(job, '任务不存在', 'job', 404)
+        check(job.state !== 'awaiting_query' || canQueryOriginal(job),
+          '未保存可查询的原任务回执，请先在服务商侧核对提交记录', 'provider_job_id', 409, 'provider_receipt_missing')
         await background.start(projectId, detail, true)
         return send(res, 200, publicJob(store.get(projectId).jobs[detail]))
       }
@@ -369,9 +383,13 @@ export function createApp(store: Store = openStore(), passwords = demoPasswords,
         check(states.every((state: string) => ['failed','awaiting_query','superseded'].includes(state)), '可清理的任务状态无效', 'states')
         const result = store.mutate(projectId, account, 'jobs.cleanup', { ...body, states }, key, p => {
           role(p, account, 'operations')
-          const deleted = Object.values(p.jobs).filter(job => states.includes(job.state)).map(job => job.id)
+          const candidates = Object.values(p.jobs).filter(job => states.includes(job.state))
+          // Keep repaint receipts and retry links available for reconciliation and deduplication.
+          const retained = candidates.filter(job => job.plan.task === 'repaint' && job.config.adapter === 'dashscope' &&
+            (job.state === 'awaiting_query' || job.provider_job_id || job.retry_of)).map(job => job.id)
+          const deleted = candidates.filter(job => !retained.includes(job.id)).map(job => job.id)
           for (const id of deleted) delete p.jobs[id]
-          return { deleted, count:deleted.length, states }
+          return { deleted, count:deleted.length, retained, states }
         })
         return send(res, 200, result)
       }

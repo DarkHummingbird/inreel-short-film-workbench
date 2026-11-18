@@ -6,9 +6,11 @@ import { dashscope, speechModelFor, validateConfig, voiceFor, wanCapabilities } 
 import { importProviderMedia, mediaPath } from '../src/media.ts'
 
 const kind = process.argv[2]
+const textAgent = kind === 'text' ? process.argv[3] : undefined
+const textAgents = ['producer', 'creative', 'writer', 'storyboard']
 const resumePath = kind === 'image-video' && process.argv[3] ? resolve(process.argv[3]) : null
-if (!['text', 'storyboard-short', 'image-video', 'speech'].includes(kind)) {
-  console.log('用法：npm run sample:real -- text | storyboard-short | image-video | speech')
+if (!['text', 'storyboard-short', 'image-video', 'speech'].includes(kind) || (textAgent && !textAgents.includes(textAgent))) {
+  console.log('用法：npm run sample:real -- text [producer|creative|writer|storyboard] | storyboard-short | image-video | speech')
   process.exit(2)
 }
 
@@ -21,7 +23,7 @@ catch (error: any) {
 const outputDir = resumePath ? dirname(resumePath) : resolve('test-results', 'real-' + new Date().toISOString().replaceAll(':','-'))
 await mkdir(outputDir, { recursive: true })
 const report: any = resumePath ? JSON.parse(await readFile(resumePath, 'utf8')) : { started_at: new Date().toISOString(), type: kind, region: config.region,
-  models: { text: config.text, image: config.image, video: config.video, speech: config.speech, speech_th: speechModelFor(config, 'th') }, calls: [], result: null }
+  text_thinking: config.textThinking, text_stream: Boolean(config.textStream), models: { text: config.text, image: config.image, video: config.video, speech: config.speech, speech_th: speechModelFor(config, 'th') }, calls: [], result: null }
 if (resumePath) {
   if (report.type !== kind || report.region !== config.region || !report.result?.imageTask ||
     report.models.image !== config.image || report.models.video !== config.video) {
@@ -50,7 +52,7 @@ const exportFile = async (asset: any, name: string) => {
 try {
   if (kind === 'text') {
     const results = []
-    for (const agent of ['producer', 'creative', 'writer', 'storyboard']) {
+    for (const agent of textAgent ? [textAgent] : textAgents) {
       const contract = contracts[agent]
       const input = contract.examples[0].input
       const output = await adapter.json(contract.prompt + '\n输出一个符合以下 Schema 的 JSON 对象：\n' + JSON.stringify(contract.outputSchema), input, agent)
@@ -121,7 +123,7 @@ try {
   process.exitCode = 1
 } finally {
   report.finished_at = new Date().toISOString()
-  report.human_review = '待编导对照角色参考、试听语音并检查画面。'
+  if (kind === 'image-video' || kind === 'speech') report.human_review = '待编导检查画面或试听语音。'
   checkpoint()
   console.log(reportPath)
 }

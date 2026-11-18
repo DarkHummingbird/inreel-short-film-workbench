@@ -1,7 +1,7 @@
 import { active, current, role, type Project, type Store } from './store.ts'
 import { canonical, check, clean, clone, conflict, fixture, hash, id, integer, langKey, now } from './common.ts'
 import { contracts, manifest, schema, validateAgent } from './contracts.ts'
-import { addAsset, fitsBoard, languageCut, languageOf, put, requireStep, sameShotInputs, validateLines } from './workflow.ts'
+import { addAsset, buildDeliveryManifest, fitsBoard, languageOf, put, requireStep, sameShotInputs, validateLines } from './workflow.ts'
 import { dashscope, dashscopeConfig, providerConfigStatus, realEnabled, speechModelFor, UnknownProviderResult, validateConfig, voiceFor, wanCapabilities } from './dashscope.ts'
 import { cropVideoRight, mockImage, mockMusic, mockSpeech, mockVideo, render, renderSceneLayout } from './media.ts'
 import { composeSkillPrompt, productionSkill } from './production-skills.ts'
@@ -17,8 +17,15 @@ const sum = (shots: any[]) => shots.reduce((total, shot) => total + shot.duratio
 const findLine = (cut: any[], id: string) => cut.find(shot => shot.dialogue.some((line: any) => line.line_id === id))
 const simpleMode = new Set(['reference', 'keyframe', 'repaint', 'location_reference', 'prop_reference', 'location_view', 'blocking_plan', 'layout_render', 'video', 'crop', 'translate', 'dubbing', 'preview', 'assemble', 'music', 'rough'])
 const via: Record<string, string> = { reference: 'art', keyframe: 'art', repaint: 'art', location_reference: 'art', prop_reference: 'art', location_view: 'art', blocking_plan: 'art', video: 'vfx', preview: 'post', assemble: 'post' }
+const imageTasks = new Set(['reference', 'keyframe', 'repaint', 'location_reference', 'prop_reference', 'location_view', 'blocking_plan'])
+const mediaKindFor = (task: string) => task === 'video' ? 'video' : imageTasks.has(task) ? 'image' : null
+
+export function canQueryOriginal(job: any) {
+  if (job.config?.adapter !== 'dashscope') return job.scenario === 'timeout'
+  return Boolean((mediaKindFor(job.plan.task) && job.provider_job_id) || job.provider_receipts?.speech?.result_url)
+}
 function shotAssets(p: Project, board: any, shot: any) {
-  const bindings = board.data.production[shot.shot_id] ?? {}
+  const bindings = board.data.production?.[shot.shot_id] ?? {}
   const { location, prop, layout } = bindings
   const wardrobe = wardrobeDescriptions(p, bindings)
   return { references: { ...(location ? { location } : {}), ...(prop ? { prop } : {}) }, ...(layout ? { layout: {ref:layout,geometry:p.assets[layout]?.layout_spec} } : {}), ...(wardrobe.length ? { wardrobe } : {}) }
@@ -213,8 +220,10 @@ function context(p: Project, body: any) {
         bind('check4', check4.ref)
         bind('language', language.ref)
         const translated = language.data.lines.filter((line: any) => line.shot_id === shot.shot_id)
-        check(translated.length === shot.dialogue.length, '该镜头的翻译对白不完整', 'language')
-        shot = { ...shot, dialogue: shot.dialogue.map((line: any) => {
+        const cut = p.artifacts[check4.artifact_ref].data.cut
+        const sourceLines = cut.find((entry: any) => entry.shot_id === shot.shot_id)?.dialogue ?? []
+        check(translated.length === sourceLines.length, '该镜头的翻译对白不完整', 'language')
+        shot = { ...shot, dialogue: sourceLines.map((line: any) => {
           const match = translated.find((item: any) => item.line_id === line.line_id)
           check(match, '该镜头对白未完整翻译', line.line_id)
           return { ...line, text: match.target_text }
@@ -242,7 +251,7 @@ function context(p: Project, body: any) {
         args.video_mode = mode
         if (board?.has_shot_rework) conflict(sameShotInputs(p, plan.ref, board.ref, shot.shot_id), '此镜头的修改待确认，请先确认新版分镜')
         if (plan.data.production) {
-          const index = plan.data.shots.indexOf(shot)
+          const index = plan.data.shots.indexOf(sourceShot)
           const previous = plan.data.shots[index - 1]
           const next = plan.data.shots[index + 1]
           args.production = {
@@ -273,33 +282,36 @@ function context(p: Project, body: any) {
     bind('check4', approved.ref)
     const language = current(p, 'language', lang)
     if (language?.upstream === approved.ref) bind('language', language.ref)
-    args.cut = ['preview', 'assemble'].includes(task) ? languageCut(p, lang, cut.data.cut) : cut.data.cut
+    args.cut = cut.data.cut
     if (task !== 'translate') {
       conflict(language?.upstream === approved.ref, '请先保存当前画面的语言稿')
-      const lines = language.data.lines
-      validateLines(p, lang, args.cut, lines, ['preview', 'assemble'].includes(task))
       check(language.data.reviewed, '请先校对并保存该语种的文本', 'reviewed')
-      args.lines = lines
       if (task === 'dubbing') {
-        const line = lines.find((l: any) => l.line_id === body.line_id)
+        validateLines(p, lang, args.cut, language.data.lines, false)
+        const line = language.data.lines.find((entry: any) => entry.line_id === body.line_id)
         check(line, '请选择要配音的对白', 'line_id')
         args.line = line
-      }
-      if (task === 'preview' || task === 'assemble') {
-        const music = p.assets[body.music_ref]
+      } else {
         const confirmation = active(p, 5, lang)
         if (task === 'assemble') {
           check(confirmation?.artifact_ref === language.ref && confirmation.upstream === approved.ref, '正式合成需要当前语种的“确认节点 5：语言素材”', 'language_confirmation_ref', 409)
-          check(music?.kind === 'audio' && (music.purpose === 'music' || music.ref.startsWith('bgm@')), '请选择本项目的背景音乐', 'music_ref')
+          conflict(confirmation.delivery_manifest, '此历史确认缺少交付清单，请重新生成同步预览并确认语言素材')
+          const confirmedMusic = confirmation.delivery_manifest.music?.asset_ref ?? null
+          conflict(!Object.hasOwn(body, 'music_ref') || (clean(body.music_ref) || null) === confirmedMusic,
+            '背景音乐已由同步预览锁定，修改后请重新生成预览并确认语言素材')
+          args.delivery_manifest = clone(confirmation.delivery_manifest)
           bind('check5', confirmation.ref)
+        } else {
+          conflict(language.status === 'draft', '请先重新打开语言稿，再生成同步预览')
+          args.delivery_manifest = buildDeliveryManifest(p, language, clean(body.music_ref) || null)
+          check(args.delivery_manifest.music, '请先选择随交付一起确认的背景音乐', 'music_ref')
         }
-        args.music = music?.ref ?? null
-        const normalized = lines.map(({ subtitle_text, ...line }: any) => line)
-        set({ mode: task === 'assemble' ? 'assemble_delivery' : 'prepare_language', target_language: lang, cut_ref: cut.ref,
-          cut: args.cut, lines: normalized, language_assets_ref: language.ref, subtitle_ref: language.ref,
-          music: music ? { asset_ref: music.ref, duration_ms: music.duration_ms } : null,
-          language_confirmation_ref: task === 'assemble' ? confirmation.ref : null },
-          [source('cut', cut.ref), source('language_assets', language.ref)])
+        const snapshot = args.delivery_manifest
+        set({ mode: task === 'assemble' ? 'assemble_delivery' : 'prepare_language', target_language: lang, cut_ref: snapshot.cut_ref,
+          cut: snapshot.cut, lines: snapshot.lines.map(({ subtitle_text, ...line }: any) => line),
+          language_assets_ref: snapshot.language_assets_ref, subtitle_ref: snapshot.language_assets_ref,
+          music: snapshot.music, language_confirmation_ref: task === 'assemble' ? confirmation.ref : null },
+          [source('cut', snapshot.cut_ref), source('language_assets', snapshot.language_assets_ref)])
       }
     }
   }
@@ -341,19 +353,25 @@ export function queue(p: Project, actor: string, body: any) {
   }
   const skill = productionSkill(plan.agent ?? plan.task)
   const prompt = agentSystemPrompt(plan, skill)
-  const external = real && !['rough', 'music', 'crop', 'layout_render'].includes(plan.task) && !(plan.task === 'translate' && plan.language === 'zh-CN')
+  const external = real && !['rough', 'music', 'crop', 'layout_render', 'preview', 'assemble'].includes(plan.task) && !(plan.task === 'translate' && plan.language === 'zh-CN')
   if (external) validateConfig(config!)
   if (external && plan.task === 'dubbing') voiceFor(config!, plan.language)
-  const model = external ? plan.task === 'video' ? config!.video : ['reference', 'keyframe', 'repaint', 'location_reference', 'prop_reference', 'location_view', 'blocking_plan'].includes(plan.task) ? config!.image : plan.task === 'dubbing' ? speechModelFor(config!, plan.language) : config!.text
+  const mediaKind = mediaKindFor(plan.task)
+  const model = external ? mediaKind ? config![mediaKind] : plan.task === 'dubbing' ? speechModelFor(config!, plan.language) : config!.text
     : real ? 'local/' + plan.task : 'mock/' + (plan.agent ?? plan.task)
   const preparedFingerprint = body.prepared_plan ? hash(canonical(body.prepared_plan)) : null
-  const identityParts = { task: body.task, context: plan.context, input: plan.input, lang: plan.language, shot: plan.shot_id, character: plan.character_id, line: plan.line?.line_id, music: plan.music, model, config: external ? safeConfig : null, prompt_only:plan.prompt_only, prepared_plan:preparedFingerprint, ...(plan.crop ? { crop: plan.crop } : {}), ...(plan.layout ? {layout:plan.layout,source_location:plan.source_location} : {}), ...(skill ? { skill: skill.fingerprint } : {}) }
+  const identityParts = { task: body.task, context: plan.context, input: plan.input, lang: plan.language, shot: plan.shot_id, character: plan.character_id, line: plan.line?.line_id, music: plan.music, model, config: external ? safeConfig : null, prompt_only:plan.prompt_only, prepared_plan:preparedFingerprint, ...(plan.delivery_manifest ? { delivery_manifest:plan.delivery_manifest } : {}), ...(plan.crop ? { crop: plan.crop } : {}), ...(plan.layout ? {layout:plan.layout,source_location:plan.source_location} : {}), ...(skill ? { skill: skill.fingerprint } : {}) }
   const identity = canonical({ ...identityParts, ...(plan.video_mode ? { video_mode:plan.video_mode, video_references:plan.video_references ?? [] } : {}) })
   const legacyIdentity = plan.video_mode === 'first_frame' ? canonical(identityParts) : null
-  const existing = Object.values(p.jobs).find(job => job.identity === identity || (legacyIdentity && !job.plan.video_mode && job.identity === legacyIdentity))
-  if (!body.retry_of && existing) return existing
+  const existing = Object.values(p.jobs).findLast(job => job.identity === identity || (legacyIdentity && !job.plan.video_mode && job.identity === legacyIdentity))
+  const previewLanguage = plan.task === 'preview' ? p.artifacts[plan.context.language] : null
+  if (!body.retry_of && existing && (!previewLanguage || (previewLanguage.data.preview_job_id === existing.id && existing.state !== 'failed'))) return existing
+  const scenario = clean(body.scenario) || null
   let savedAgentPlan: any = body.prepared_plan ? { response: body.prepared_plan, source: 'edited' } : undefined
   if (body.retry_of) {
+    const retry = Object.values(p.jobs).findLast(job =>
+      job.retry_of === body.retry_of && job.identity === identity && (job.scenario ?? null) === scenario)
+    if (retry) return retry
     const previous = p.jobs[body.retry_of]
     const interruptedText = previous?.state === 'awaiting_query' && previous.plan.agent === previous.plan.task
       && !previous.provider_receipts?.compiled_request
@@ -367,7 +385,7 @@ export function queue(p: Project, actor: string, body: any) {
   }
   const sequence = Object.values(p.jobs).filter(job => job.plan.task === plan.task && job.plan.shot_id === plan.shot_id).length + 1
   const job = {
-    id: id(), actor, plan, identity, sequence, retry_of: body.retry_of ?? null, scenario: clean(body.scenario) || null,
+    id: id(), actor, plan, identity, sequence, retry_of: body.retry_of ?? null, scenario,
     state: 'queued', created_at: now(), updated_at: now(), usage: null, result: null, error: null, provider_job_id: null,
     model, config: external ? { adapter: 'dashscope', ...safeConfig } : { adapter: real ? 'local' : 'mock' },
     provider_receipts: {}, prompt_fingerprint: plan.agent ? contracts[plan.agent].fingerprint : null, agent_prompt: prompt,
@@ -375,6 +393,11 @@ export function queue(p: Project, actor: string, body: any) {
     ...(savedAgentPlan ? { saved_agent_plan: savedAgentPlan } : {}),
   }
   p.jobs[job.id] = job
+  if (previewLanguage) {
+    delete previewLanguage.data.preview_ref
+    delete previewLanguage.data.preview_manifest
+    previewLanguage.data.preview_job_id = job.id
+  }
   return job
 }
 export function previewJob(p: Project, actor: string, body: any) {
@@ -385,7 +408,7 @@ export function previewJob(p: Project, actor: string, body: any) {
   const agentPrompt = agentSystemPrompt(plan, skill)
   const pricing = providerConfigStatus(p.id).pricing
   const estimate = (() => {
-    if (!realEnabled()) return { mode:'local', currency:'CNY', low:0, high:0, note:'本地模拟不产生模型费用' }
+    if (!realEnabled() || plan.delivery_manifest) return { mode:'local', currency:'CNY', low:0, high:0, note:'本地执行不产生模型费用' }
     let low = 0, high = 0
     const missing: string[] = []
     if (plan.task === 'video') {
@@ -411,7 +434,7 @@ export function previewJob(p: Project, actor: string, body: any) {
   })()
   return {
     task: plan.task, agent: plan.agent, plan, skill: skill ?? null,
-    agent_prompt: agentPrompt, real_call: Boolean(realEnabled() && plan.agent),
+    agent_prompt: agentPrompt, real_call: Boolean(realEnabled() && plan.agent && !plan.delivery_manifest),
     estimate,
     note: plan.agent
       ? '生成前检查只显示将使用的素材；点击“准备提示词”后，页面只展示真正发送给媒体模型的自然语言提示词。'
@@ -511,8 +534,8 @@ async function performReal(p: Project, job: any, audit: (stage: string, receipt:
   const live = dashscopeConfig(p.id)
   const config = validateConfig({ ...job.config, apiKey: live.apiKey, voices: live.voices })
   const adapter = dashscope(config, audit, transport)
-  const { task, agent, input, language, line, cut, lines, music } = job.plan
-  const mediaKind = task === 'video' ? 'video' : ['reference', 'keyframe', 'repaint', 'location_reference', 'prop_reference', 'location_view', 'blocking_plan'].includes(task) ? 'image' : null
+  const { task, agent, input, language, line } = job.plan
+  const mediaKind = mediaKindFor(task)
   let response = mediaKind && query ? job.provider_receipts.agent?.plan : null
   let dialogueProtection: any[] = []
   if (agent && !query) {
@@ -552,7 +575,6 @@ async function performReal(p: Project, job: any, audit: (stage: string, receipt:
       ? { ...await adapter.download(job.provider_receipts.speech.result_url, 'audio'), text: line.target_text, language, voice: voiceFor(config, language) }
       : await adapter.speak(line, language)
   }
-  if (task === 'preview' || task === 'assemble') asset = await render(cut, lines, p.assets[music], p.assets)
   return { response, data, asset, dialogue_protection: dialogueProtection }
 }
 async function perform(p: Project, job: any) {
@@ -585,8 +607,17 @@ async function perform(p: Project, job: any) {
     units = [{ unit: 'speech_characters', quantity: [...plan.line.target_text].length }]
   }
   if (task === 'music') asset = await mockMusic()
-  if (task === 'preview' || task === 'assemble' || task === 'rough') asset = await render(plan.cut, plan.lines ?? [], p.assets[plan.music], p.assets)
+  if (task === 'rough') asset = await render(plan.cut, [], null, p.assets)
   return { response, data, asset, usage: job.scenario === 'missing_usage' ? null : units }
+}
+async function performDelivery(p: Project, job: any) {
+  const snapshot = job.plan.delivery_manifest
+  conflict(snapshot, '旧任务缺少固定交付清单，请重新生成同步预览')
+  const data = manifest(job.plan.input)
+  const response = ok(data)
+  validateAgent('post', job.plan.input, response, p)
+  const asset = await render(snapshot.cut, snapshot.lines, p.assets[snapshot.music?.asset_ref], p.assets, snapshot.audio_modes)
+  return { response, data, asset, usage: null }
 }
 function isCurrent(p: Project, job: any) {
   const { context, language } = job.plan
@@ -614,14 +645,19 @@ function accept(p: Project, job: any, result: any) {
     const prefix = ['video', 'crop'].includes(task) ? (language ? langKey(language) + '_' + shot_id + '_video' : shot_id + '_video') : task === 'music' ? 'bgm' : task === 'keyframe' ? shot_id + '_keyframe' : task === 'repaint' ? shot_id + '_repaint'
       : ['location_reference', 'prop_reference', 'location_view', 'blocking_plan', 'layout_render'].includes(task) ? shot_id + '_' + task
       : task === 'reference' ? job.plan.character_id + '_ref' : task === 'dubbing' ? langKey(language) + '_' + line.line_id + '_audio' : task + '_file'
+    const spoken = job.plan.input?.approved_shot?.dialogue
+    const isLocalized = task === 'video' && Boolean(language)
     media = addAsset(p, job.actor, { ...asset, job_id: job.id, shot_id, language: language ?? (task === 'video' ? 'zh-CN' : null),
-      localized: Boolean(task === 'video' && language), board_ref: context.board ?? null,
+      localized: isLocalized, board_ref: context.board ?? null,
+      ...(task === 'video' ? { spoken_dialogue: clone(spoken) } : {}),
       ...(['location_reference', 'prop_reference', 'location_view', 'blocking_plan', 'layout_render'].includes(task) ? { purpose:'reference', reference_kind:task === 'prop_reference' ? 'prop' : ['blocking_plan','layout_render'].includes(task) ? 'layout' : 'location', ...(task === 'layout_render' ? {source_location:job.plan.source_location} : {}) } : {}) }, prefix)
   }
   const currentSelection = job.plan.language
     ? p.localized_selected?.[job.plan.language]?.[shot_id] ?? null
     : p.selected[shot_id] ?? null
-  const latest = isCurrent(p, job) && (task !== 'video' || currentSelection === job.plan.previous_selection)
+  const previewLanguage = task === 'preview' ? p.artifacts[context.language] : null
+  const latest = isCurrent(p, job) && (task !== 'video' || currentSelection === job.plan.previous_selection) &&
+    (!previewLanguage || (previewLanguage.status === 'draft' && previewLanguage.data.preview_job_id === job.id))
   let artifact: any = null
   if (latest) {
     if (outputTypes[task]) {
@@ -639,11 +675,13 @@ function accept(p: Project, job: any, result: any) {
         artifact = put(p, job.actor, 'language', { lines: data, reviewed: language === 'zh-CN' }, context.check4, language)
     }
     if (task === 'rough') p.artifacts[context.cut_draft].data.preview_ref = media.ref
-    if (task === 'preview') {
-      const languageArtifact = p.artifacts[context.language]
-      if (languageArtifact.status === 'draft') languageArtifact.data.preview_ref = media.ref
+    if (previewLanguage) {
+      previewLanguage.data.preview_ref = media.ref
+      previewLanguage.data.preview_manifest = clone(job.plan.delivery_manifest)
     }
-    if (task === 'assemble') artifact = put(p, job.actor, 'delivery', { ...data, file_ref: media.ref }, context.check5, language)
+    if (task === 'assemble') artifact = put(p, job.actor, 'delivery', {
+      ...data, file_ref: media.ref, delivery_manifest: clone(job.plan.delivery_manifest),
+    }, context.check5, language)
   }
   job.state = latest ? 'succeeded' : 'superseded'
   job.result = { artifact_ref: artifact?.ref ?? null, asset_ref: media?.ref ?? null, response: result.response, data: ['translate', 'producer'].includes(task) ? data : undefined }
@@ -659,8 +697,7 @@ export function worker(store: Store, preparedPlan?: PreparedAgentPlan, transport
     const job = snapshot.jobs[jobId]
     if (!job || (query ? job.state !== 'awaiting_query' : job.state !== 'queued')) return
     const real = job.config.adapter === 'dashscope'
-    const canQueryMedia = ['reference', 'keyframe', 'location_reference', 'prop_reference', 'location_view', 'blocking_plan', 'video'].includes(job.plan.task) && job.provider_job_id
-    if (query && (real ? !canQueryMedia && !job.provider_receipts?.speech?.result_url : job.scenario !== 'timeout')) return
+    if (query && !canQueryOriginal(job)) return
     const execute = async () => {
       const simulatedTimeout = job.scenario === 'timeout' && !query
       const claimed = store.update(projectId, p => {
@@ -683,7 +720,8 @@ export function worker(store: Store, preparedPlan?: PreparedAgentPlan, transport
       }
       try {
         if (job.scenario === 'invalid_key') check(false, '配置无效：服务商拒绝凭证，请检查地域和 Key', 'model', 422, 'provider_auth')
-        const result = job.plan.task === 'layout_render' ? {asset:await renderSceneLayout(job.plan.layout)} : job.plan.task === 'crop'
+        const result = ['preview', 'assemble'].includes(job.plan.task) ? await performDelivery(snapshot, job)
+          : job.plan.task === 'layout_render' ? {asset:await renderSceneLayout(job.plan.layout)} : job.plan.task === 'crop'
           ? { asset: await cropVideoRight(snapshot.assets[job.plan.crop.asset_ref], job.plan.crop.right_percent) }
           : real ? await performReal(snapshot, job, audit, query, preparedPlan, transport)
           : job.config.adapter === 'local' && job.plan.task === 'translate' ? { response: null, data: translated(job.plan), asset: null, usage: null }
@@ -704,9 +742,14 @@ export function worker(store: Store, preparedPlan?: PreparedAgentPlan, transport
   function recover() {
     for (const project of store.all()) {
       if (Object.values(project.jobs).some(job => job.state === 'running')) store.update(project.id, p => {
-        for (const job of Object.values(p.jobs)) if (job.state === 'running') job.state = 'awaiting_query'
+        for (const job of Object.values(p.jobs)) if (job.state === 'running')
+          job.state = job.plan.delivery_manifest ? 'queued' : 'awaiting_query'
       })
-      for (const job of Object.values(project.jobs)) if (job.state === 'queued') start(project.id, job.id)
+      for (const job of Object.values(store.get(project.id).jobs)) {
+        if (job.state === 'queued') start(project.id, job.id)
+        if (job.state === 'awaiting_query' && job.config.adapter === 'dashscope' && job.plan.task === 'repaint' && canQueryOriginal(job))
+          start(project.id, job.id, true)
+      }
     }
   }
   return { start, recover, idle: () => Promise.all([...running.values()]) }

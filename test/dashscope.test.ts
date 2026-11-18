@@ -88,7 +88,7 @@ test('百炼请求协议、首帧能力、用量与原任务查询', async () =>
 test('流式文字任务保留首段回执，收到结束标记后解析 JSON', async () => {
   const config = { ...dashscopeConfig(), workspace:'llm-example', textStream:true }
   const events = [
-    { id:'req-sse', choices:[{ delta:{ content:'{"ok":' } }] },
+    { id:'req-sse', model:'qwen-snapshot', choices:[{ delta:{ reasoning_content:'sample', content:'{"ok":' } }] },
     { id:'req-sse', choices:[{ delta:{ content:'true}' } }] },
     { id:'req-sse', choices:[], usage:{ prompt_tokens:8, completion_tokens:5 } },
   ].map(event => 'data: ' + JSON.stringify(event) + '\r\n\r\n').join('')
@@ -103,9 +103,10 @@ test('流式文字任务保留首段回执，收到结束标记后解析 JSON', 
   assert.deepEqual(await adapter.json('JSON',{}), { ok:true })
   assert.deepEqual(receipts[0], { request_id:'req-sse' })
   assert.deepEqual(receipts[1].usage, [{ unit:'input_tokens',quantity:8 },{ unit:'output_tokens',quantity:5 }])
+  assert.deepEqual(receipts[2], { model:'qwen-snapshot', requested_model:config.text, reasoning_present:true })
   await assert.rejects(() => adapter.json('JSON',{}), UnknownProviderResult)
   assert.equal(calls,2)
-  assert.equal(receipts[2].request_id,'req-sse')
+  assert.equal(receipts[3].request_id,'req-sse')
 })
 
 test('百炼超时、缺凭证和无效 Key 不触发再次提交', async () => {

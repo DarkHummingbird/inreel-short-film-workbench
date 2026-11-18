@@ -118,8 +118,10 @@ test('《末班车之后》HTTP 验收 AT-01–22', { timeout: 240000 }, async t
       headers: { 'idempotency-key': randomUUID(), 'x-expected-version': String((await get(actor)).version), 'x-asset-purpose': purpose, 'x-filename': encodeURIComponent(name), ...extraHeaders } })
     return code === 201 ? result.result : result
   }
-  const checkpoint = (actor: string, step: number, ref: string, decision = 'approve', extra: any = {}, opts?: any) =>
-    write(actor, 'checkpoints/' + step + '/decide', { ref, decision, ...extra }, opts)
+  const checkpoint = async (actor: string, step: number, ref: string, decision = 'approve', extra: any = {}, opts?: any) => {
+    const preview_ref = step === 5 ? (await get(actor)).artifacts[ref]?.data.preview_ref : undefined
+    return write(actor, 'checkpoints/' + step + '/decide', { ref, decision, preview_ref, ...extra }, opts)
+  }
   async function review(ref: string, decision = 'approve', extra: any = {}, opts?: any) {
     const file_ref = (await get(op)).artifacts[ref].data.file_ref
     return checkpoint(op, 6, ref, decision, { file_ref, content_checked: true, ...extra }, opts)
@@ -139,12 +141,12 @@ test('《末班车之后》HTTP 验收 AT-01–22', { timeout: 240000 }, async t
   const refOf = (j: any) => j.result.artifact_ref
   const fileOf = (j: any) => j.result.asset_ref
   const details = (j: any) => ({ id: j.id, state: j.state, usage: j.usage, result: j.result?.artifact_ref ?? j.result?.asset_ref, error: j.error })
-  async function assemble(language: string, music_ref: string) {
-    const record = await job('assemble', { language, music_ref })
+  async function assemble(language: string, music_ref: string, retry_of?: string) {
+    const record = await job('assemble', { language, music_ref, retry_of })
     await submit(refOf(record))
     return record
   }
-  async function prepareLanguage(language: string, { thaiBackup = false, oversize = false } = {}) {
+  async function prepareLanguage(language: string, { thaiBackup = false, oversize = false, music = bgm } = {}) {
     const translate = await job('translate', { language })
     const item = (await get()).artifacts[refOf(translate)]
     const lines = item.data.lines
@@ -188,7 +190,7 @@ test('《末班车之后》HTTP 验收 AT-01–22', { timeout: 240000 }, async t
     }
     const draft = await save('language', { lines, reviewed: true }, { language })
     await start('assemble', { language }, { code: 409 })
-    await job('preview', { language })
+    await job('preview', { language, music_ref: music })
     const confirmation = await checkpoint(dir, 5, draft.ref)
     return { draft, confirmation, lines }
   }
@@ -312,9 +314,9 @@ test('《末班车之后》HTTP 验收 AT-01–22', { timeout: 240000 }, async t
     return { record: await checkpoint(dir, 4, cut), shots: draft.data.cut, S04: [details(firstS04), details(secondS04)] }
   })
   await run(6, dir, LANG, async () => {
+    bgm = fileOf(await job('music'))
     for (const language of LANG) prepared[language] = await prepareLanguage(language, { thaiBackup: language === 'th' })
     assert.equal(new Set(LANG.map(language => prepared[language].confirmation.upstream)).size, 1)
-    bgm = fileOf(await job('music'))
     return LANG.map(language => prepared[language].confirmation)
   })
   await run(7, op + ', ' + dir, LANG, async () => {
@@ -326,6 +328,9 @@ test('《末班车之后》HTTP 验收 AT-01–22', { timeout: 240000 }, async t
     const alternate = (await asset(dir, 'music', 'alternate.wav', await call(dir, path('media/' + bgm), { binary: true }))).ref
     deliveries['zh-CN'] = await assemble('zh-CN', bgm)
     deliveries.en = await assemble('en', bgm)
+    const alternateDraft = await save('language', { lines:prepared.th.lines, reviewed:true }, { language:'th' })
+    await job('preview', { language:'th', music_ref:alternate })
+    await checkpoint(dir, 5, alternateDraft.ref)
     deliveries.th = await assemble('th', alternate)
     accepted['zh-CN'] = refOf(deliveries['zh-CN'])
     await review(accepted['zh-CN'])
@@ -347,7 +352,7 @@ test('《末班车之后》HTTP 验收 AT-01–22', { timeout: 240000 }, async t
     const lines = clone(prepared.th.lines)
     lines.at(-1).subtitle_text = 'อย่าเพิ่งไปนะ'
     const correction = await save('language', { lines, reviewed: true }, { language: 'th' })
-    await job('preview', { language: 'th' })
+    await job('preview', { language: 'th', music_ref:bgm })
     await checkpoint(dir, 5, correction.ref)
     deliveries.th = await assemble('th', bgm)
     for (const language of ['en', 'th']) {
@@ -460,20 +465,27 @@ test('《末班车之后》HTTP 验收 AT-01–22', { timeout: 240000 }, async t
     const current = (await get()).current['delivery:th']
     const oldBytes = await download(current)
     const music = (await asset(dir, 'music', 'music-v2.wav', await call(dir, path('media/' + bgm), { binary: true }))).ref
-    const rejected = await assemble('th', music)
+    const previous = Object.values((await get()).jobs).find((record: any) => record.result?.artifact_ref === current) as any
+    const rejected = await assemble('th', bgm, previous.id)
     const item = refOf(rejected)
     await review(item, 'return', { note: '仅更换音乐' })
-    const retry = await job('assemble', { language: 'th', music_ref: music, retry_of: rejected.id })
+    const retry = await job('assemble', { language: 'th', music_ref: bgm, retry_of: rejected.id })
     assert.notEqual(refOf(retry), item)
     await submit(refOf(retry))
     await download(refOf(retry), 403)
     await review(refOf(retry), 'return', { note: '音乐仍需调整' })
-    const newMusic = (await asset(dir, 'music', 'music-v3.wav', await call(dir, path('media/' + bgm), { binary: true }))).ref
-    const revised = refOf(await assemble('th', newMusic))
+    await start('assemble', { language:'th', music_ref:music }, { code:409 })
+    const state = await get()
+    const lines = state.artifacts[state.current['language:th']].data.lines
+    const draft = await save('language', { lines, reviewed:true }, { language:'th' })
+    await job('preview', { language:'th', music_ref:music })
+    const preview = await checkpoint(dir, 5, draft.ref)
+    const revised = refOf(await assemble('th', music))
     await review(revised)
-    assert.equal((await get()).active['5:th'], old)
+    assert.notEqual(preview.ref, old)
+    assert.equal((await get()).active['5:th'], preview.ref)
     assert.deepEqual(await download(current), oldBytes)
-    return { old, revised, newMusic }
+    return { old, revised, music }
   })
   await run(17, op, ['TXT', 'MD', 'DOCX', 'DOC', 'restart'], async () => {
     const original = (await get(op)).brief.raw
@@ -588,8 +600,9 @@ test('《末班车之后》HTTP 验收 AT-01–22', { timeout: 240000 }, async t
     for (const shot of plan.shots) await select(shot.shot_id, fileOf(await job('video', { shot_id: shot.shot_id })))
     const joined = await save('cut', {})
     await checkpoint(dir, 4, joined.ref)
-    await prepareLanguage('th')
-    const output = refOf(await assemble('th', fileOf(await job('music'))))
+    const music = fileOf(await job('music'))
+    await prepareLanguage('th', { music })
+    const output = refOf(await assemble('th', music))
     await review(output)
     assert.ok((await download(output)).length)
     const state = await get()

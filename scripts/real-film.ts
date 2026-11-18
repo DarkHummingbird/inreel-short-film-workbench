@@ -103,7 +103,7 @@ async function write(account: string, route: string, data: any = {}) {
 const save = (type: string, data: any, extra = {}) => write(dir,'artifacts',{type,data,...extra})
 const submit = (artifact: any) => artifact.status === 'draft' ? write(dir,'artifacts/'+artifact.ref+'/submit') : artifact
 const approve = (account: string, step: number, artifact: any, candidate?: string) =>
-  write(account,'checkpoints/'+step+'/decide',{ ref:artifact.ref, upstream:artifact.upstream, decision:'approve', ...(candidate ? {candidate} : {}) })
+  write(account,'checkpoints/'+step+'/decide',{ ref:artifact.ref, upstream:artifact.upstream, decision:'approve', ...(step === 5 ? {preview_ref:artifact.data.preview_ref} : {}), ...(candidate ? {candidate} : {}) })
 async function confirm(account: string, step: number, artifact: any) {
   return artifact.status === 'approved' ? artifact : approve(account, step, artifact)
 }
@@ -369,13 +369,14 @@ try {
       }
       if (lines.some((line: any,i: number) => line.audio_ref !== item.data.lines[i].audio_ref))
         item = await save('language',{lines,reviewed:true},{language})
-      if (!cur(await project(),'language:'+language).data.preview_ref)
-        await runJobs([{key:'preview-'+language,task:'preview',args:{language}}])
-      await confirm(dir,5,cur(await project(),'language:'+language))
+      if (!cur(await project(),'language:'+language).data.preview_manifest)
+        await runJobs([{key:'preview-'+language,task:'preview',args:{language,music_ref:music.ref}}])
+      const reviewed = cur(await project(),'language:'+language)
+      await confirm(dir,5,reviewed)
     }
     let delivery = cur(await project(),'delivery:'+language)
     if (!delivery) {
-      const composed = await runJobs([{key:'assemble-'+language,task:'assemble',args:{language,music_ref:music.ref}}])
+      const composed = await runJobs([{key:'assemble-'+language,task:'assemble',args:{language}}])
       delivery = (await project()).artifacts[composed['assemble-'+language].artifact_ref]
     }
     delivery = await submit(delivery)

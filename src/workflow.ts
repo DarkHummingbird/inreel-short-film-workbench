@@ -298,7 +298,7 @@ export function cutFrom(p: Project, data: any) {
   const cut = order.map(shotId => {
     const shot = board.shots.find((s: any) => s.shot_id === shotId)
     const video = p.assets[p.selected[shotId]]
-    check(shot && fitsBoard(p, video, confirmed.artifact_ref, shotId) && integer(video.duration_ms, 1), shotId + ' 缺少本版分镜对应的可播放视频', shotId)
+    check(shot && !video?.localized && fitsBoard(p, video, confirmed.artifact_ref, shotId) && integer(video.duration_ms, 1), shotId + ' 缺少本版分镜对应的可播放视频', shotId)
     const dialogue = shot.dialogue.map((line: any) => {
       const replacement = overrides[line.line_id]
       if (replacement === undefined) return line
@@ -319,10 +319,7 @@ export function cutFrom(p: Project, data: any) {
 export function validateLines(p: Project, language: string, cut: any[], lines: any[], requireAudio = true) {
   const source = cut.flatMap(shot => shot.dialogue.map((line: any) => ({ ...line, shot })))
   check(lines.length === source.length && new Set(lines.map(line => line.line_id)).size === lines.length, '对白清单必须覆盖确认的全部对白', 'lines')
-  const nativeAudio = lines.every((line: any) => !line.audio_ref) && cut.every((shot: any) =>
-    p.assets[shot.video_ref]?.audio && p.assets[shot.video_ref]?.language === language)
-  check(!requireAudio || nativeAudio || lines.every((line: any) => line.audio_ref),
-    '请先生成并选用该语种的原生对白视频，或逐句补齐后期配音', 'lines')
+  const audioModes = requireAudio ? deliveryAudio(p, language, cut, lines) : null
   for (const line of lines) {
     const original = source.find(item => item.line_id === line.line_id)
     const field = line.shot_id + '/' + line.line_id
@@ -331,7 +328,7 @@ export function validateLines(p: Project, language: string, cut: any[], lines: a
     check(line.subtitle_text === undefined || clean(line.subtitle_text), '字幕不能留空', field)
     if (!requireAudio) continue
     const { start_ms, duration_ms } = original.shot
-    if (nativeAudio) {
+    if (audioModes?.[line.shot_id] === 'native') {
       check(integer(line.subtitle_start_ms, start_ms) && integer(line.subtitle_end_ms, line.subtitle_start_ms + 1) && line.subtitle_end_ms <= start_ms + duration_ms, '字幕时间轴超出镜头', field)
       continue
     }
@@ -343,17 +340,84 @@ export function validateLines(p: Project, language: string, cut: any[], lines: a
       line.subtitle_start_ms <= line.audio_start_ms + 400 && line.subtitle_end_ms >= line.audio_start_ms + audio.duration_ms - 400, '字幕与配音时序不匹配', field)
   }
 }
-export function languageCut(p: Project, language: string, cut: any[]) {
+function deliveryAudio(p: Project, language: string, cut: any[], lines: any[]) {
+  return Object.fromEntries(cut.map(shot => {
+    const shotLines = lines.filter(line => line.shot_id === shot.shot_id)
+    const video = p.assets[shot.video_ref]
+    const native = video?.audio && video.language === language
+    if (native && shotLines.every(line => !line.audio_ref)) return [shot.shot_id, 'native' as const]
+    if (!shotLines.length) return [shot.shot_id, 'silence' as const]
+    return [shot.shot_id, 'dub' as const]
+  }))
+}
+
+function dialogueContent(lines: any[], text: 'text' | 'target_text') {
+  return lines.map(line => ({ line_id: line.line_id, speaker_id: line.speaker_id, text: line[text] }))
+    .sort((a, b) => a.line_id.localeCompare(b.line_id))
+}
+
+export function localizedDialogueMatches(p: Project, video: any, lines: any[], shotId: string) {
+  // Older assets can use the immutable generation input as their provenance.
+  const spoken = video?.spoken_dialogue ?? p.jobs[video?.job_id]?.plan?.input?.approved_shot?.dialogue
+  const expected = dialogueContent(lines.filter(line => line.shot_id === shotId), 'target_text')
+  return Array.isArray(spoken) && canonical(dialogueContent(spoken, 'text')) === canonical(expected)
+}
+
+export function languageCut(p: Project, language: string, cut: any[], lines: any[]) {
   if (language === 'zh-CN') return cut
   const selected = p.localized_selected?.[language] ?? {}
   const boardRef = active(p, 3)?.artifact_ref
   return cut.map((shot: any) => {
     const video = p.assets[selected[shot.shot_id]]
-    check(video?.kind === 'video' && video.language === language && video.shot_id === shot.shot_id,
-      shot.shot_id + ' 尚未选用' + language + '原生对白视频', shot.shot_id)
+    check(video?.kind === 'video' && video.localized && video.language === language && video.shot_id === shot.shot_id,
+      shot.shot_id + ' 尚未选用' + language + '专属视频', shot.shot_id)
     check(boardRef && fitsBoard(p, video, boardRef, shot.shot_id), shot.shot_id + ' 的' + language + '视频基于旧分镜，请重新生成', shot.shot_id)
+    check(localizedDialogueMatches(p, video, lines, shot.shot_id), shot.shot_id + ' 的视频对白与校对稿不一致，请重新生成', shot.shot_id)
+    check(integer(video.duration_ms, 1) && (shot.in_ms ?? 0) + shot.duration_ms <= video.duration_ms,
+      shot.shot_id + ' 的语种视频短于当前剪辑区间，请更换镜头版本', shot.shot_id)
     return { ...shot, video_ref: video.ref }
   })
+}
+
+export function buildDeliveryManifest(p: Project, item: Artifact, musicRef: string | null) {
+  const language = item.language!
+  const approved = requireStep(p, 4)
+  const base = p.artifacts[approved.artifact_ref]
+  conflict(item.upstream === approved.ref, '请先保存当前画面的语言稿')
+  check(item.data.reviewed, '请先校对并保存该语种的文本', 'reviewed')
+  const cut = languageCut(p, language, base.data.cut, item.data.lines)
+  const lines = item.data.lines
+  validateLines(p, language, cut, lines)
+  const audio_modes = deliveryAudio(p, language, cut, lines)
+  if (language === 'zh-CN') for (const shot of cut) {
+    if (audio_modes[shot.shot_id] !== 'native') continue
+    const video = p.assets[shot.video_ref]
+    const source = video.spoken_dialogue ?? p.artifacts[video.board_ref]?.data.shots.find((entry: any) => entry.shot_id === shot.shot_id)?.dialogue
+    if (source) check(canonical(dialogueContent(source, 'text')) === canonical(dialogueContent(shot.dialogue, 'text')),
+      shot.shot_id + ' 的原生台词与剪辑对白不一致，请更换视频、补录或只修改字幕', shot.shot_id)
+  }
+  const music = musicRef ? p.assets[musicRef] : null
+  check(!musicRef || (music?.kind === 'audio' && (music.purpose === 'music' || music.ref.startsWith('bgm@'))),
+    '请选择本项目的背景音乐', 'music_ref')
+  return clone({
+    cut_ref: base.ref, language_assets_ref: item.ref, target_language: language,
+    cut, lines, audio_modes, music: music ? { asset_ref: music.ref, duration_ms: music.duration_ms } : null,
+  })
+}
+export type DeliveryManifest = ReturnType<typeof buildDeliveryManifest>
+
+function resetLanguageSelection(p: Project, actor: string, item: Artifact) {
+  const language = item.language!
+  const wasDraft = item.status === 'draft'
+  invalidate(p, 5, language)
+  if (!wasDraft) {
+    put(p, actor, 'language', { lines: clone(item.data.lines), reviewed: item.data.reviewed }, item.upstream, language)
+    return
+  }
+  delete item.data.preview_ref
+  delete item.data.preview_manifest
+  delete item.data.preview_job_id
+  item.status = 'draft'
 }
 function reviewDelivery(p: Project, item: Artifact, actor: string, body: any): DeliveryReview {
   const fileRef = item.data.file_ref
@@ -480,9 +544,9 @@ export function apply(p: Project, actor: string, action: string, body: any) {
       const lang = languageOf(p, source.language)
       const cut = requireStep(p, 4)
       check(cut.ref === source.upstream, '旧语言素材基于已变化的画面基准，请重新生成', 'ref')
-      validateLines(p, lang, p.artifacts[cut.artifact_ref].data.cut, source.data.lines)
+      validateLines(p, lang, p.artifacts[cut.artifact_ref].data.cut, source.data.lines, false)
       if (active(p, 5, lang)) invalidate(p, 5, lang)
-      return put(p, actor, 'language', clone(source.data), cut.ref, lang)
+      return put(p, actor, 'language', { lines: clone(source.data.lines), reviewed: source.data.reviewed }, cut.ref, lang)
     }
     const lang = languageOf(p, source.language)
     const check5 = requireStep(p, 5, lang)
@@ -562,10 +626,12 @@ export function apply(p: Project, actor: string, action: string, body: any) {
         }
       }
     }
+    let deliveryManifest: DeliveryManifest | undefined
     if (step === 5) {
-      const cut = p.artifacts[active(p, 4).artifact_ref]
-      validateLines(p, lang!, languageCut(p, lang!, cut.data.cut), item.data.lines)
-      check(item.data.preview_ref && p.assets[item.data.preview_ref]?.kind === 'delivery', '请先生成当前版本的同步预览', 'preview')
+      const preview = item.data.preview_manifest
+      deliveryManifest = buildDeliveryManifest(p, item, preview?.music?.asset_ref ?? null)
+      check(preview && item.data.preview_ref && body.preview_ref === item.data.preview_ref && p.assets[item.data.preview_ref]?.kind === 'delivery' &&
+        canonical(preview) === canonical(deliveryManifest), '请先生成并检查当前交付清单的同步预览', 'preview')
     }
     if (step === 3) {
       for (const [shotId, assetRef] of Object.entries(p.selected)) {
@@ -575,6 +641,7 @@ export function apply(p: Project, actor: string, action: string, body: any) {
     if (step < 6) invalidate(p, step + 1, step === 5 ? lang! : undefined)
     const record = { ref: ref(p, prefix('check' + step, lang)), step, language: lang, artifact_ref: item.ref,
       upstream: dependency, actor, at: now(), candidate: chosen,
+      ...(deliveryManifest ? { delivery_manifest: deliveryManifest, preview_ref: item.data.preview_ref } : {}),
       ...(deliveryReview ? { file_ref: deliveryReview.file_ref, delivery_review: deliveryReview } : {}),
       ...(step === 4 && (p.artifacts[active(p, 3).artifact_ref].data.production || p.artifacts[active(p, 3).artifact_ref].data.join_checks) ? {
         preview_ref: item.data.preview_ref,
@@ -649,8 +716,14 @@ export function apply(p: Project, actor: string, action: string, body: any) {
       languageOf(p, selectedLanguage)
       const check4 = requireStep(p, 4)
       check(selectedLanguageArtifact?.upstream === check4.ref, '请先保存该语种的对白稿', 'language')
-      check(candidate?.language === selectedLanguage, '候选不属于当前目标语种', 'ref')
-    }
+      check(selectedLanguage !== 'zh-CN' && candidate?.localized && candidate.language === selectedLanguage, '候选不属于当前目标语种', 'ref')
+      if (body.decision !== 'reject') {
+        const shot = p.artifacts[check4.artifact_ref].data.cut.find((entry: any) => entry.shot_id === body.shot_id)
+        check(shot && (shot.in_ms ?? 0) + shot.duration_ms <= candidate.duration_ms, '该视频短于当前剪辑区间', 'ref')
+        check(localizedDialogueMatches(p, candidate, selectedLanguageArtifact.data.lines, body.shot_id),
+          '视频对白与该语种校对稿不一致，请重新生成', 'ref')
+      }
+    } else check(!candidate?.localized, '专属语种视频不能用作共享画面基准', 'ref')
     check(fitsBoard(p, candidate, board.artifact_ref, body.shot_id), '候选不属于本版镜头', 'ref')
     if (p.artifacts[board.artifact_ref].data.production) {
       const note = clean(body.note)
@@ -662,11 +735,8 @@ export function apply(p: Project, actor: string, action: string, body: any) {
         if (currentSelected === body.ref) {
           if (selectedLanguage) delete p.localized_selected![selectedLanguage][body.shot_id]
           else delete p.selected[body.shot_id]
-          if (selectedLanguage) {
-            delete p.active['5:' + selectedLanguage]
-            delete p.active['6:' + selectedLanguage]
-            if (selectedLanguageArtifact) { delete selectedLanguageArtifact.data.preview_ref; selectedLanguageArtifact.status = 'draft' }
-          } else invalidate(p, 4)
+          if (selectedLanguage) resetLanguageSelection(p, actor, selectedLanguageArtifact!)
+          else invalidate(p, 4)
         }
         return candidate
       }
@@ -676,9 +746,7 @@ export function apply(p: Project, actor: string, action: string, body: any) {
       p.localized_selected[selectedLanguage] ??= {}
       if (p.localized_selected[selectedLanguage][body.shot_id] !== body.ref) {
         p.localized_selected[selectedLanguage][body.shot_id] = body.ref
-        delete p.active['5:' + selectedLanguage]
-        delete p.active['6:' + selectedLanguage]
-        if (selectedLanguageArtifact) { delete selectedLanguageArtifact.data.preview_ref; selectedLanguageArtifact.status = 'draft' }
+        resetLanguageSelection(p, actor, selectedLanguageArtifact!)
       }
     } else if (p.selected[body.shot_id] !== body.ref) {
       p.selected[body.shot_id] = body.ref
@@ -772,6 +840,9 @@ export function apply(p: Project, actor: string, action: string, body: any) {
       const cut = requireStep(p, 4)
       const lines = array(data.lines, 'lines')
       validateLines(p, lang, p.artifacts[cut.artifact_ref].data.cut, lines, false)
+      for (const [shotId, ref] of Object.entries(p.localized_selected?.[lang] ?? {})) {
+        if (!localizedDialogueMatches(p, p.assets[ref], lines, shotId)) delete p.localized_selected![lang][shotId]
+      }
       invalidate(p, 5, lang)
       return put(p, actor, type, { lines, reviewed: data.reviewed === true }, cut.ref, lang)
     }
